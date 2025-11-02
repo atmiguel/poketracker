@@ -1,17 +1,7 @@
-import * as z from "zod";
+import { POKEMON_CARD_TYPES, Card } from "./models";
 
-const User = z.object({
-  name: z.string(),
-});
-
-// some untrusted data...
-const input = {
-  // name: 'okay',
-  /* stuff */
+const whatever = (): Card => {
+  return {
+    name: 'sure',
+  };
 };
-
-// the parsed result is validated and type safe!
-const data = User.parse(input);
-
-// so you can use it with confidence :)
-console.log(data.name);
