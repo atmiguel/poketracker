@@ -1,13 +1,8 @@
-import * as z from "zod";
-import { NonEmptyArray, NonEmptyString, PositiveInteger } from "./zod_types";
-import { getRequiredValue } from "./objects";
+import * as z from 'zod';
+import { NonEmptyArray, NonEmptyString, PositiveInteger } from './zod_types';
+import { getRequiredValue } from './objects';
 
-export const CardRaritySymbol = z.enum([
-  'crown', 
-  'diamond',
-  'shiny',
-  'star',
-]);
+export const CardRaritySymbol = z.enum(['crown', 'diamond', 'shiny', 'star']);
 export type CardRaritySymbol = z.infer<typeof CardRaritySymbol>;
 export const CARD_RARITY_SYMBOLS = CardRaritySymbol.enum;
 
@@ -17,13 +12,15 @@ const MAX_COUNTS_BY_SYMBOL: Record<CardRaritySymbol, number> = {
   shiny: 2,
   star: 3,
 };
-export const CardRarity = z.object({
-  count: PositiveInteger,
-  symbol: CardRaritySymbol,
-}).refine(({ count, symbol }) => {
-  const maxCount = getRequiredValue(MAX_COUNTS_BY_SYMBOL, symbol);
-  return count <= maxCount;
-});
+export const CardRarity = z
+  .object({
+    count: PositiveInteger,
+    symbol: CardRaritySymbol,
+  })
+  .refine(({ count, symbol }) => {
+    const maxCount = getRequiredValue(MAX_COUNTS_BY_SYMBOL, symbol);
+    return count <= maxCount;
+  });
 export type CardRarity = z.infer<typeof CardRarity>;
 
 export namespace CardRarityConstants {

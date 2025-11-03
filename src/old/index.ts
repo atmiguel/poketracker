@@ -1,4 +1,4 @@
-import { HtmlDownloader } from "./html/impls/html-downloader";
+import { HtmlDownloader } from './html/impls/html-downloader';
 
 const runTest = async (): Promise<void> => {
   const downloader = new HtmlDownloader();
@@ -8,8 +8,7 @@ const runTest = async (): Promise<void> => {
   });
 };
 
-runTest().catch(err => {
-  console.error("Error:", err);
+runTest().catch((err) => {
+  console.error('Error:', err);
   process.exit(1);
 });
-
