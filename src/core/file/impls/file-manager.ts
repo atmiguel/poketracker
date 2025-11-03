@@ -53,7 +53,7 @@ export class FileManager implements IFileChecker, IFileWriter {
       }
     }
 
-    LOGGER.info(`Writing to ${destinationFilepath}...`, {withoutNewline: true});
+    LOGGER.info(`Writing to ${destinationFilepath}...`, { withoutNewline: true });
     await mkdir(dirname(destinationFilepath), { recursive: true });
     await writeFile(destinationFilepath, contents);
     LOGGER.info('done');

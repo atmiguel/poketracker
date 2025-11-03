@@ -14,10 +14,7 @@ class Logger implements ILogger {
     return Logger.instance;
   };
 
-  public readonly info: ILogger['info'] = (
-    contents,
-    options,
-  ): void => {
+  public readonly info: ILogger['info'] = (contents, options): void => {
     const { withoutNewline = false } = options ?? {};
 
     process.stdout.write(contents);
@@ -27,4 +24,4 @@ class Logger implements ILogger {
   };
 }
 
-export const LOGGER = Logger.getInstance()
+export const LOGGER = Logger.getInstance();
