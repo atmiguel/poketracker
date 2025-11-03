@@ -4,17 +4,13 @@ import type { IHtmlDownloader } from '../interfaces/html-downloader';
 import type { Nullable } from '../../types/constants';
 import type { IFileWriter } from '../../file/interfaces/file-writer';
 import { FileWriter } from '../../file/impls/file-writer';
-import type { IFileChecker } from '../../file/interfaces/file-checker';
-import { FileChecker } from '../../file/impls/file-checker';
 
 export class HtmlDownloader implements IHtmlDownloader {
   private static instance: Nullable<HtmlDownloader> = null;
 
-  private readonly fileChecker: IFileChecker;
   private readonly fileWriter: IFileWriter;
 
   private constructor(params: {
-    fileChecker: IFileChecker;
     fileWriter: IFileWriter;
   }) {
     this.fileWriter = params.fileWriter;
@@ -22,7 +18,6 @@ export class HtmlDownloader implements IHtmlDownloader {
 
   private static readonly createInstance = (): HtmlDownloader => {
     return new HtmlDownloader({
-      fileChecker: FileChecker.getInstance(),
       fileWriter: FileWriter.getInstance(),
     });
   }
@@ -37,20 +32,19 @@ export class HtmlDownloader implements IHtmlDownloader {
 
   public readonly downloadHtml: IHtmlDownloader['downloadHtml'] = async ({
     destinationFilepath,
-    shouldOverwrite,
+    options,
     url,
   }): Promise<void> => {
-    const { data } = await axios.get(url);
+    const { shouldOverwrite = false } = options ?? {};
 
-    if (!shouldOverwrite) {
-      if (await this.fileChecker.checkFileExists({ filepath: destinationFilepath })) {
-        return;
-      }
-    }
+    const { data } = await axios.get(url);
 
     await this.fileWriter.writeToFile({
       contents: data,
       destinationFilepath,
+      options: {
+        shouldOverwrite,
+      },
     });
   };
 }
