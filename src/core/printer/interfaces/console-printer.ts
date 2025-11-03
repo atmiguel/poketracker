@@ -3,6 +3,6 @@ export interface IConsolePrinter {
     contents: string,
     options?: {
       withNewline?: boolean;
-    }
+    },
   ) => void;
 }

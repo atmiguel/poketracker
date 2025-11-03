@@ -1,5 +1,5 @@
-import { CardPath, CardUrl } from "./card/constants";
-import { HtmlDownloader } from "./core/html/impls/html-downloader";
+import { CardPath, CardUrl } from './card/constants';
+import { HtmlDownloader } from './core/html/impls/html-downloader';
 
 const main = async (): Promise<void> => {
   await HtmlDownloader.getInstance().downloadHtml({
@@ -7,7 +7,7 @@ const main = async (): Promise<void> => {
     url: CardUrl.BOOSTER_PACK_SETS,
     options: {
       shouldOverwrite: true,
-    }
+    },
   });
 };
 

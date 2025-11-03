@@ -1,3 +1,3 @@
 export namespace CorePath {
-  export const RESOURCES = "./resources";
+  export const RESOURCES = './resources';
 }

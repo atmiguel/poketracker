@@ -1,7 +1,7 @@
-import { access } from "fs/promises";
+import { access } from 'fs/promises';
 
-import type { Nullable } from "../../types/constants";
-import type { IFileChecker } from "../interfaces/file-checker";
+import type { Nullable } from '../../types/constants';
+import type { IFileChecker } from '../interfaces/file-checker';
 
 export class FileChecker implements IFileChecker {
   private static instance: Nullable<FileChecker> = null;
@@ -14,7 +14,7 @@ export class FileChecker implements IFileChecker {
     }
 
     return FileChecker.instance;
-  }
+  };
 
   public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
     filepath,

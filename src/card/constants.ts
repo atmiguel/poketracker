@@ -1,7 +1,7 @@
-import { CorePath } from "../core/path/constants";
+import { CorePath } from '../core/path/constants';
 
 export namespace CardUrl {
-  const base = "https://pocket.limitlesstcg.com";
+  const base = 'https://pocket.limitlesstcg.com';
 
   export const BOOSTER_PACK_SETS = `${base}/cards`;
 }

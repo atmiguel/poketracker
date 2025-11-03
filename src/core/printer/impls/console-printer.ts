@@ -13,13 +13,9 @@ export class ConsolePrinter implements IConsolePrinter {
     }
 
     return ConsolePrinter.instance;
-  }
+  };
 
-
-  public readonly print: IConsolePrinter['print'] = (
-    contents,
-    options,
-  ): void => {
+  public readonly print: IConsolePrinter['print'] = (contents, options): void => {
     const { withNewline = true } = options ?? {};
 
     process.stdout.write(contents);

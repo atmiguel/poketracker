@@ -10,9 +10,7 @@ export class HtmlDownloader implements IHtmlDownloader {
 
   private readonly fileWriter: IFileWriter;
 
-  private constructor(params: {
-    fileWriter: IFileWriter;
-  }) {
+  private constructor(params: { fileWriter: IFileWriter }) {
     this.fileWriter = params.fileWriter;
   }
 
@@ -20,7 +18,7 @@ export class HtmlDownloader implements IHtmlDownloader {
     return new HtmlDownloader({
       fileWriter: FileWriter.getInstance(),
     });
-  }
+  };
 
   public static readonly getInstance = (): HtmlDownloader => {
     if (HtmlDownloader.instance === null) {
@@ -28,7 +26,7 @@ export class HtmlDownloader implements IHtmlDownloader {
     }
 
     return HtmlDownloader.instance;
-  }
+  };
 
   public readonly downloadHtml: IHtmlDownloader['downloadHtml'] = async ({
     destinationFilepath,

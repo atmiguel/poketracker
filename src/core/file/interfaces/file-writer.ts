@@ -4,6 +4,6 @@ export interface IFileWriter {
     destinationFilepath: string;
     options?: {
       shouldOverwrite?: boolean;
-    }
+    };
   }) => Promise<void>;
 }
