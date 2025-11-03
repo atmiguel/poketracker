@@ -4,6 +4,7 @@ import { HtmlDownloader } from "./core/html/impls/html-downloader";
 const main = async (): Promise<void> => {
   await HtmlDownloader.getInstance().downloadHtml({
     destinationFilepath: CardPath.BOOSTER_PACK_SETS,
+    shouldOverwrite: true,
     url: CardUrl.BOOSTER_PACK_SETS,
   });
 };
