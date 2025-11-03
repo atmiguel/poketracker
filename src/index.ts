@@ -1,7 +1,15 @@
-import { POKEMON_CARD_TYPES, Card } from "./models";
+import { HtmlDownloader } from "./html/impls/html-downloader";
 
-const whatever = (): Card => {
-  return {
-    name: 'sure',
-  };
+const runTest = async (): Promise<void> => {
+  const downloader = new HtmlDownloader();
+  await downloader.downloadHtml({
+    destinationFilepath: 'resources/temp.html',
+    url: 'https://pocket.limitlesstcg.com/cards',
+  });
 };
+
+runTest().catch(err => {
+  console.error("Error:", err);
+  process.exit(1);
+});
+
