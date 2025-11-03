@@ -1,13 +1,10 @@
-import { parse, resolve, type ParsedPath } from "path";
+import { parse, resolve, type ParsedPath } from 'path';
 
 export class Path {
   private readonly parsedPath: ParsedPath;
   private readonly value: string;
 
-  private constructor(params: {
-    parsedPath: ParsedPath;
-    value: string;
-  }) {
+  private constructor(params: { parsedPath: ParsedPath; value: string }) {
     this.parsedPath = params.parsedPath;
     this.value = params.value;
   }
@@ -17,11 +14,11 @@ export class Path {
     const parsedPath = parse(resolvedValue);
 
     return new Path({ parsedPath, value: resolvedValue });
-  }
+  };
 
   public readonly isRoot = (): boolean => {
     return this.value === '/';
-  }
+  };
 
   public get parent(): Path {
     return Path.create(this.parsedPath.dir);
@@ -33,5 +30,5 @@ export class Path {
 
   public readonly toString = (): string => {
     return this.value;
-  }
+  };
 }
