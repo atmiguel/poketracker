@@ -1,11 +1,10 @@
-import { HtmlDownloader } from "./html/impls/html-downloader";
+import { CardPath, CardUrl } from "./card/constants";
+import { HtmlDownloader } from "./core/html/impls/html-downloader";
 
 const main = async (): Promise<void> => {
-  const downloader = new HtmlDownloader();
-
-  await downloader.downloadHtml({
-    destinationFilepath: 'resources/temp.html',
-    url: 'https://pocket.limitlesstcg.com/cards',
+  await HtmlDownloader.getInstance().downloadHtml({
+    destinationFilepath: CardPath.BOOSTER_PACK_SETS,
+    url: CardUrl.BOOSTER_PACK_SETS,
   });
 };
 
