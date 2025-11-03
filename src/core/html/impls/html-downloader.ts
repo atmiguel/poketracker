@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { IHtmlDownloader } from '../interfaces/html-downloader';
 import type { Nullable } from '../../types/constants';
 import type { IFileWriter } from '../../file/interfaces/file-writer';
-import { FileWriter } from '../../file/impls/file-writer';
+import { FileManager } from '../../file/impls/file-manager';
 
 export class HtmlDownloader implements IHtmlDownloader {
   private static instance: Nullable<HtmlDownloader> = null;
@@ -16,7 +16,7 @@ export class HtmlDownloader implements IHtmlDownloader {
 
   private static readonly createInstance = (): HtmlDownloader => {
     return new HtmlDownloader({
-      fileWriter: FileWriter.getInstance(),
+      fileWriter: FileManager.getInstance(),
     });
   };
 
