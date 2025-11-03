@@ -29,7 +29,7 @@ export class HtmlDownloader implements IHtmlDownloader {
   };
 
   public readonly downloadHtml: IHtmlDownloader['downloadHtml'] = async ({
-    destinationFilepath,
+    destinationPath,
     options,
     url,
   }): Promise<void> => {
@@ -39,7 +39,7 @@ export class HtmlDownloader implements IHtmlDownloader {
 
     await this.fileWriter.writeToFile({
       contents: data,
-      destinationFilepath,
+      destinationPath,
       options: {
         shouldOverwrite,
       },

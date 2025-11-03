@@ -1,6 +1,8 @@
+import type { Path } from "../../types/path";
+
 export interface IHtmlDownloader {
   downloadHtml: (params: {
-    destinationFilepath: string;
+    destinationPath: Path;
     url: string;
     options?: {
       shouldOverwrite?: boolean;

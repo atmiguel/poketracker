@@ -1,3 +1,5 @@
+import type { Path } from "../../types/path";
+
 export interface IFileChecker {
-  checkFileExists: (params: { filepath: string }) => Promise<{ fileExists: boolean }>;
+  checkFileExists: (params: { path: Path }) => Promise<{ fileExists: boolean }>;
 }

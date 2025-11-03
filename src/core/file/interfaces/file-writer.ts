@@ -1,7 +1,9 @@
+import type { Path } from "../../types/path";
+
 export interface IFileWriter {
   writeToFile: (params: {
     contents: string;
-    destinationFilepath: string;
+    destinationPath: Path;
     options?: {
       shouldOverwrite?: boolean;
     };

@@ -20,11 +20,11 @@ export class FileManager implements IFileChecker, IFileWriter {
   };
 
   public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
-    filepath,
+    path,
   }): Promise<{ fileExists: boolean }> => {
     let fileExists: boolean;
     try {
-      await access(filepath);
+      await access(path.toString());
       fileExists = true;
     } catch {
       fileExists = false;
@@ -35,7 +35,7 @@ export class FileManager implements IFileChecker, IFileWriter {
 
   public readonly writeToFile: IFileWriter['writeToFile'] = async ({
     contents,
-    destinationFilepath,
+    destinationPath,
     options,
   }): Promise<void> => {
     const { shouldOverwrite = false } = options ?? {};
@@ -43,19 +43,19 @@ export class FileManager implements IFileChecker, IFileWriter {
     if (shouldOverwrite) {
       // No need to check file existence
     } else {
-      const { fileExists } = await this.checkFileExists({ filepath: destinationFilepath });
+      const { fileExists } = await this.checkFileExists({ path: destinationPath });
 
       if (fileExists) {
-        LOGGER.info(`File already exists at ${destinationFilepath}, not overwriting.`);
+        LOGGER.info(`File already exists at ${destinationPath}, not overwriting.`);
         return;
       } else {
         // Doesn't exist so we'll write to it
       }
     }
 
-    LOGGER.info(`Writing to ${destinationFilepath}...`, { withoutNewline: true });
-    await mkdir(dirname(destinationFilepath), { recursive: true });
-    await writeFile(destinationFilepath, contents);
+    LOGGER.info(`Writing to ${destinationPath}...`, { withoutNewline: true });
+    await mkdir(dirname(destinationPath.toString()), { recursive: true });
+    await writeFile(destinationPath.toString(), contents);
     LOGGER.info('done');
   };
 }
