@@ -1,11 +1,63 @@
 {
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "noEmit": true,
-    "strict": true,
-  },
-  "include": ["src/**/*.ts"],
+	"compilerOptions": {
+
+		// Treat files as modules even if it doesn't use import/export
+		"moduleDetection": "force",
+
+		// Ignore module structure
+		"module": "Preserve",
+
+		// Allow JSON modules to be imported
+		"resolveJsonModule": true,
+
+		// Allow JS files to be imported from TS and vice versa
+		"allowJs": true,
+
+		// Use correct ESM import behavior
+		"esModuleInterop": true,
+
+		// Disallow features that require cross-file awareness
+		"isolatedModules": true,
+	},
 }
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "module": "node20",
+//     "moduleResolution": "node16",
+//     "strict": true,
+//     "esModuleInterop": true,
+//     "outDir": "./dist",
+//     "allowJs": false,
+//     "noEmit": false
+//   },
+//   "include": ["src/**/*.ts"],
+//   "exclude": ["node_modules", "dist"]
+// }
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "module": "Node16",
+//     "moduleResolution": "node16",
+//     "strict": true,
+//     "esModuleInterop": true,
+//     // "outDir": "./dist",
+//     // "allowJs": false,
+//     "noEmit": true,
+//   },
+//   "include": ["src/**/*.ts"],
+//   // "exclude": ["node_modules", "dist"]
+// }
+
+// {
+//   "compilerOptions": {
+//     "esModuleInterop": true,
+//     "noEmit": true,
+//     "strict": true,
+//   },
+//   "include": ["src/**/*.ts"],
+// }
 // {
 //   // This is an alias to @tsconfig/node16: https://github.com/tsconfig/bases
 //   "extends": "ts-node/node16/tsconfig.json",
