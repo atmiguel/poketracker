@@ -1,6 +1,6 @@
 import { access, mkdir, writeFile } from 'fs/promises';
 
-import type { Nullable } from '../../types/constants';
+import type { Nullable } from '../../types/builtin';
 import type { IFileChecker } from '../interfaces/file-checker';
 import type { IFileWriter } from '../interfaces/file-writer';
 import { LOGGER } from '../../log/impls/logger';

@@ -1,10 +1,10 @@
-import { CardPath, CardUrl } from './card/constants';
+import { CCard } from './card/constants';
 import { HtmlDownloader } from './core/html/impls/html-downloader';
 
 const main = async (): Promise<void> => {
   await HtmlDownloader.getInstance().downloadHtml({
-    destinationPath: CardPath.BOOSTER_PACK_SETS,
-    url: CardUrl.BOOSTER_PACK_SETS,
+    destinationPath: CCard.Path.BOOSTER_PACK_SETS,
+    url: CCard.Url.BOOSTER_PACK_SETS,
     options: {
       shouldOverwrite: true,
     },

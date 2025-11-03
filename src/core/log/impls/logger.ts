@@ -1,4 +1,4 @@
-import type { Nullable } from '../../types/constants';
+import type { Nullable } from '../../types/builtin';
 import type { ILogger } from '../interfaces/logger';
 
 class Logger implements ILogger {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import type { IHtmlDownloader } from '../interfaces/html-downloader';
-import type { Nullable } from '../../types/constants';
+import type { Nullable } from '../../types/builtin';
 import type { IFileWriter } from '../../file/interfaces/file-writer';
 import { FileManager } from '../../file/impls/file-manager';
 
