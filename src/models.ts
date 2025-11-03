@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { NonEmptyString, PositiveInteger } from "./zod_types";
+import { NonEmptyArray, NonEmptyString, PositiveInteger } from "./zod_types";
 import { getRequiredValue } from "./objects";
 
 export const CardRaritySymbol = z.enum([
@@ -77,3 +77,18 @@ export const Card = z.object({
   rarity: CardRarity,
 });
 export type Card = z.infer<typeof Card>;
+
+export const BoosterPack = z.object({
+  cards: NonEmptyArray(Card),
+  name: z.nullable(NonEmptyString),
+});
+export type BoosterPack = z.infer<typeof BoosterPack>;
+
+export const BoosterPackSet = z.object({
+  id: NonEmptyString,
+  name: NonEmptyString,
+  packs: NonEmptyArray(BoosterPack),
+  releaseDate: z.nullable(z.date()),
+  series: NonEmptyString,
+});
+export type BoosterPackSet = z.infer<typeof BoosterPackSet>;
