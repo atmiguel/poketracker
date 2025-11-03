@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "tsx ./src/main.ts",
+    "main": "tsx ./src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
