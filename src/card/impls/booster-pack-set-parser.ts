@@ -4,18 +4,6 @@ import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parse
 import type { BoosterPackSet } from '../models/booster-pack-set';
 import { load } from 'cheerio';
 
-const isTagElement = (element: cheerio.Element): element is cheerio.TagElement => {
-  return element.type === "tag";
-}
-
-const isTextElement = (element: cheerio.Element): element is cheerio.TextElement => {
-  return element.type === "text";
-}
-
-const getTagChildren = (element: cheerio.TagElement ): Array<cheerio.TagElement> => {
-  return element.children.filter(isTagElement);
-};
-
 class HtmlElement {
   private readonly element: cheerio.Element;
   private readonly root: cheerio.Root;
@@ -86,15 +74,48 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
 
   private static readonly parseSeriesRow = ({row}:{row: HtmlElement}): { series: string } => {
     const cells = row.getChildren();
-
     assert(cells.length === 1);
-    const cell = cells[0]!;
 
+    const cell = cells[0]!;
     const seriesText = cell.text;
     assert(seriesText.endsWith(' Series'));
 
     const series = seriesText.split(' ')[0]!;
     return { series };
+  };
+
+  private static readonly parsePackSetNameCell = (
+    { nameCell }: { nameCell: HtmlElement }
+  ): { id: string; name: string } => {
+    const nameAnchor = nameCell.findOne('a');
+
+    const lines = nameAnchor.text.split('\n');
+    assert(lines.length === 2);
+
+    const [name, id] = lines;
+    assert(name !== undefined);
+    assert(id !== undefined);
+
+    return { id: id.trim(), name: name.trim() };
+  }
+
+  private static readonly parsePackSetRow = ({
+    row,
+  }: {
+    row: HtmlElement;
+  }): { id: string; name: string } => {
+    const cells = row.getChildren();
+    assert(cells.length === 3);
+
+    const [nameCell, releaseDateCell, cardCountCell] = cells;
+    assert(nameCell !== undefined);
+    assert(releaseDateCell !== undefined);
+    assert(cardCountCell !== undefined);
+
+    // TODO: parse release date and card count
+    const { id, name } = BoosterPackSetParser.parsePackSetNameCell({ nameCell });
+
+    return { id, name };
   };
 
   public readonly parseBoosterPackSets: IBoosterPackSetParser['parseBoosterPackSets'] = ({
@@ -115,68 +136,22 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
           break;
         }
         case 3: {
-          // either header row or pack set row
+          const headerCells = row.findMany('th');
+          if (headerCells.length > 0) {
+            // skip header row
+            continue;
+          }
+
+          assert(series !== null);
+          const { name } = BoosterPackSetParser.parsePackSetRow({ row });
+          console.log(name);
           break;
         }
         default: {
           throw new Error("unexpected cell count");
         }
       }
-
-      console.log(series);
     }
-    // for (const row of reader.getChildren(setsTable)) {
-    //   const cells = row.children();
-
-    //   switch (cells.length) {
-    //     case 1: {
-    //       // series row
-    //       const cell = cells[0];
-    //       console.log($(cell).text());
-    //       break;
-    //     }
-    //     case 3: {
-    //       // either header row or pack set row
-
-    //       const [nameCell, releaseDateCell, cardCountCell] = cells.toArray().map($);
-    //       assert(nameCell !== undefined);
-    //       assert(releaseDateCell !== undefined);
-    //       assert(cardCountCell !== undefined);
-
-    //       if (nameCell.is('th')) {
-    //         // header row
-    //         continue;
-    //       }
-
-    //       const nameLink = nameCell.find('a');
-    //       assert(nameLink.length === 1);
-    //       const nameLinkElement = nameLink[0]!;
-    //       assert(isTagElement(nameLinkElement));
-
-    //       assert(nameLinkElement.children.length === 5);
-    //       const [_, __, nameElement, setIdElement, ___] = nameLinkElement.children;
-    //       assert(nameElement !== undefined);
-    //       assert(setIdElement !== undefined);
-
-    //       const name = $(nameElement).text().trim();
-    //       const setId = $(setIdElement).text().trim();
-
-    //       // TODO: clean this up
-    //       results.push({
-    //         id: setId,
-    //         name,
-    //         packs: [],
-    //         releaseDate: null,
-    //         series: '',
-    //       });
-
-    //       break;
-    //     }
-    //     default: {
-    //       throw new Error("unexpected cell count");
-    //     }
-    //   }
-    // }
 
     return results;
   };
