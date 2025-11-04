@@ -16,32 +16,59 @@ const getTagChildren = (element: cheerio.TagElement ): Array<cheerio.TagElement>
   return element.children.filter(isTagElement);
 };
 
-class HtmlReader {
-  private readonly $: cheerio.Root;
+class HtmlElement {
+  private readonly element: cheerio.Element;
+  private readonly root: cheerio.Root;
 
-  private constructor(params: {$: cheerio.Root}) {
-    this.$ = params.$;
+  private constructor(params: { element: cheerio.Element; root: cheerio.Root }) {
+    this.element = params.element;
+    this.root = params.root;
   }
 
-  public static readonly create = ({ data }: { data: string }): HtmlReader => {
-    const $ = load(data);
-    return new HtmlReader({ $ });
+  public static readonly create = ({data}: { data: string }): HtmlElement => {
+    const root = load(data);
+
+    const htmlCheerio = root('html');
+    assert(htmlCheerio.length === 1);
+    const element = htmlCheerio[0]!;
+
+    return new HtmlElement({ element, root });
   };
 
-  public readonly getOne = (selector: string): cheerio.Cheerio => {
-    const result = this.$(selector);
-    assert(result.length === 1);
-
-    return result;
+  private get cheerio(): cheerio.Cheerio {
+    return this.root(this.element);
   }
 
-  public readonly getText = (element: cheerio.Element): string => {
-    return this.$(element).text().trim();
+  public get length(): number {
+    return this.cheerio.length;
   }
-  
-  public readonly getChildren = (c: cheerio.Cheerio): Array<cheerio.Cheerio> => {
-    return c.children().toArray().map(this.$);
+
+  public get text(): string {
+    return this.cheerio.text().trim();
+  }
+
+  private readonly createFromElement = (element: cheerio.Element): HtmlElement => {
+    return new HtmlElement({ element, root: this.root });
   };
+
+  private readonly getElementArray = (cheerio: cheerio.Cheerio) => {
+    return cheerio.toArray().map(this.createFromElement);
+  };
+
+  public readonly getChildren = (): Array<HtmlElement> => {
+    return this.getElementArray(this.cheerio.children());
+  };
+
+  public readonly findOne = (selector: string): HtmlElement => {
+    const results = this.cheerio.find(selector);
+    assert(results.length === 1);
+    return this.createFromElement(results[0]!);
+  }
+
+  public readonly findMany = (selector: string): Array<HtmlElement> => {
+    const results = this.cheerio.find(selector);
+    return this.getElementArray(results);
+  }
 }
 
 export class BoosterPackSetParser implements IBoosterPackSetParser {
@@ -57,66 +84,99 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
     return BoosterPackSetParser.instance;
   };
 
+  private static readonly parseSeriesRow = ({row}:{row: HtmlElement}): { series: string } => {
+    const cells = row.getChildren();
+
+    assert(cells.length === 1);
+    const cell = cells[0]!;
+
+    const seriesText = cell.text;
+    assert(seriesText.endsWith(' Series'));
+
+    const series = seriesText.split(' ')[0]!;
+    return { series };
+  };
+
   public readonly parseBoosterPackSets: IBoosterPackSetParser['parseBoosterPackSets'] = ({
     data,
   }): Array<BoosterPackSet> => {
-    const reader = HtmlReader.create({ data });
-
-    const setsTable = reader.getOne('.sets-table');
+    const rootElement = HtmlElement.create({ data });
+    const setsTable = rootElement.findOne('.sets-table');
 
     const results: Array<BoosterPackSet> = [];
-    for (const row of reader.getChildren(setsTable)) {
-      const cells = row.children();
+    let series: Nullable<string> = null;
+    for (const row of setsTable.findMany('tr')) {
+      const cells = row.getChildren();
 
       switch (cells.length) {
         case 1: {
-          // series row
-          const cell = cells[0];
-          console.log($(cell).text());
+          const { series: result } = BoosterPackSetParser.parseSeriesRow({ row });
+          series = result;
           break;
         }
         case 3: {
           // either header row or pack set row
-
-          const [nameCell, releaseDateCell, cardCountCell] = cells.toArray().map($);
-          assert(nameCell !== undefined);
-          assert(releaseDateCell !== undefined);
-          assert(cardCountCell !== undefined);
-
-          if (nameCell.is('th')) {
-            // header row
-            continue;
-          }
-
-          const nameLink = nameCell.find('a');
-          assert(nameLink.length === 1);
-          const nameLinkElement = nameLink[0]!;
-          assert(isTagElement(nameLinkElement));
-
-          assert(nameLinkElement.children.length === 5);
-          const [_, __, nameElement, setIdElement, ___] = nameLinkElement.children;
-          assert(nameElement !== undefined);
-          assert(setIdElement !== undefined);
-
-          const name = $(nameElement).text().trim();
-          const setId = $(setIdElement).text().trim();
-
-          // TODO: clean this up
-          results.push({
-            id: setId,
-            name,
-            packs: [],
-            releaseDate: null,
-            series: '',
-          });
-
           break;
         }
         default: {
           throw new Error("unexpected cell count");
         }
       }
+
+      console.log(series);
     }
+    // for (const row of reader.getChildren(setsTable)) {
+    //   const cells = row.children();
+
+    //   switch (cells.length) {
+    //     case 1: {
+    //       // series row
+    //       const cell = cells[0];
+    //       console.log($(cell).text());
+    //       break;
+    //     }
+    //     case 3: {
+    //       // either header row or pack set row
+
+    //       const [nameCell, releaseDateCell, cardCountCell] = cells.toArray().map($);
+    //       assert(nameCell !== undefined);
+    //       assert(releaseDateCell !== undefined);
+    //       assert(cardCountCell !== undefined);
+
+    //       if (nameCell.is('th')) {
+    //         // header row
+    //         continue;
+    //       }
+
+    //       const nameLink = nameCell.find('a');
+    //       assert(nameLink.length === 1);
+    //       const nameLinkElement = nameLink[0]!;
+    //       assert(isTagElement(nameLinkElement));
+
+    //       assert(nameLinkElement.children.length === 5);
+    //       const [_, __, nameElement, setIdElement, ___] = nameLinkElement.children;
+    //       assert(nameElement !== undefined);
+    //       assert(setIdElement !== undefined);
+
+    //       const name = $(nameElement).text().trim();
+    //       const setId = $(setIdElement).text().trim();
+
+    //       // TODO: clean this up
+    //       results.push({
+    //         id: setId,
+    //         name,
+    //         packs: [],
+    //         releaseDate: null,
+    //         series: '',
+    //       });
+
+    //       break;
+    //     }
+    //     default: {
+    //       throw new Error("unexpected cell count");
+    //     }
+    //   }
+    // }
 
     return results;
   };
