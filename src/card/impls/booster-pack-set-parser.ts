@@ -16,6 +16,34 @@ const getTagChildren = (element: cheerio.TagElement ): Array<cheerio.TagElement>
   return element.children.filter(isTagElement);
 };
 
+class HtmlReader {
+  private readonly $: cheerio.Root;
+
+  private constructor(params: {$: cheerio.Root}) {
+    this.$ = params.$;
+  }
+
+  public static readonly create = ({ data }: { data: string }): HtmlReader => {
+    const $ = load(data);
+    return new HtmlReader({ $ });
+  };
+
+  public readonly getOne = (selector: string): cheerio.Cheerio => {
+    const result = this.$(selector);
+    assert(result.length === 1);
+
+    return result;
+  }
+
+  public readonly getText = (element: cheerio.Element): string => {
+    return this.$(element).text().trim();
+  }
+  
+  public readonly getChildren = (c: cheerio.Cheerio): Array<cheerio.Cheerio> => {
+    return c.children().toArray().map(this.$);
+  };
+}
+
 export class BoosterPackSetParser implements IBoosterPackSetParser {
   private static instance: Nullable<BoosterPackSetParser> = null;
 
@@ -32,14 +60,12 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
   public readonly parseBoosterPackSets: IBoosterPackSetParser['parseBoosterPackSets'] = ({
     data,
   }): Array<BoosterPackSet> => {
-    const $ = load(data);
+    const reader = HtmlReader.create({ data });
 
-    const setsTable = $('.sets-table');
-    assert(setsTable.length === 1);
+    const setsTable = reader.getOne('.sets-table');
 
     const results: Array<BoosterPackSet> = [];
-    const rows = setsTable.find('tr');
-    for (const row of rows.toArray().map($)) {
+    for (const row of reader.getChildren(setsTable)) {
       const cells = row.children();
 
       switch (cells.length) {
