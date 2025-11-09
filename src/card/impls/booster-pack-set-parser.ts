@@ -1,8 +1,11 @@
 import assert from 'assert';
 import type { Nullable } from '../../core/types/builtin';
 import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parser';
-import type { BoosterPackSet } from '../models/booster-pack-set';
+import { BoosterPackSet } from '../models/booster-pack-set';
 import { load } from 'cheerio';
+import { PositiveIntegerString } from '../../core/types/zod';
+import { parse, isValid } from 'date-fns';
+import { CCard } from '../constants';
 
 class HtmlElement {
   private readonly element: cheerio.Element;
@@ -13,7 +16,7 @@ class HtmlElement {
     this.root = params.root;
   }
 
-  public static readonly create = ({data}: { data: string }): HtmlElement => {
+  public static readonly create = ({ data }: { data: string }): HtmlElement => {
     const root = load(data);
 
     const htmlCheerio = root('html');
@@ -51,12 +54,12 @@ class HtmlElement {
     const results = this.cheerio.find(selector);
     assert(results.length === 1);
     return this.createFromElement(results[0]!);
-  }
+  };
 
   public readonly findMany = (selector: string): Array<HtmlElement> => {
     const results = this.cheerio.find(selector);
     return this.getElementArray(results);
-  }
+  };
 }
 
 export class BoosterPackSetParser implements IBoosterPackSetParser {
@@ -72,7 +75,7 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
     return BoosterPackSetParser.instance;
   };
 
-  private static readonly parseSeriesRow = ({row}:{row: HtmlElement}): { series: string } => {
+  private static readonly parseSeriesRow = ({ row }: { row: HtmlElement }): { series: string } => {
     const cells = row.getChildren();
     assert(cells.length === 1);
 
@@ -84,9 +87,11 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
     return { series };
   };
 
-  private static readonly parsePackSetNameCell = (
-    { nameCell }: { nameCell: HtmlElement }
-  ): { id: string; name: string } => {
+  private static readonly parsePackSetNameCell = ({
+    nameCell,
+  }: {
+    nameCell: HtmlElement;
+  }): { id: string; name: string } => {
     const nameAnchor = nameCell.findOne('a');
 
     const lines = nameAnchor.text.split('\n');
@@ -97,13 +102,35 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
     assert(id !== undefined);
 
     return { id: id.trim(), name: name.trim() };
-  }
+  };
+
+  private static readonly parseReleaseDate = ({
+    releaseDateText,
+  }: {
+    releaseDateText: string;
+  }): { releaseDate: Nullable<Date> } => {
+    let releaseDate: Nullable<Date>;
+    if (releaseDateText.length === 0) {
+      releaseDate = null;
+    } else {
+      releaseDate = parse(releaseDateText, 'dd MMM yy', new Date());
+      if (!isValid(releaseDate)) {
+        throw new Error(`expected valid release date, but got "${releaseDateText}"`);
+      }
+
+      releaseDate = new Date(
+        Date.UTC(releaseDate.getUTCFullYear(), releaseDate.getUTCMonth(), releaseDate.getUTCDate()),
+      );
+    }
+
+    return { releaseDate };
+  };
 
   private static readonly parsePackSetRow = ({
     row,
   }: {
     row: HtmlElement;
-  }): { id: string; name: string } => {
+  }): { cardCount: number; id: string; name: string; releaseDate: Nullable<Date> } => {
     const cells = row.getChildren();
     assert(cells.length === 3);
 
@@ -112,10 +139,13 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
     assert(releaseDateCell !== undefined);
     assert(cardCountCell !== undefined);
 
-    // TODO: parse release date and card count
     const { id, name } = BoosterPackSetParser.parsePackSetNameCell({ nameCell });
+    const cardCount = PositiveIntegerString.parse(cardCountCell.text);
+    const { releaseDate } = BoosterPackSetParser.parseReleaseDate({
+      releaseDateText: releaseDateCell.text,
+    });
 
-    return { id, name };
+    return { cardCount, id, name, releaseDate };
   };
 
   public readonly parseBoosterPackSets: IBoosterPackSetParser['parseBoosterPackSets'] = ({
@@ -143,24 +173,35 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
           }
 
           assert(series !== null);
-          const { id, name } = BoosterPackSetParser.parsePackSetRow({ row });
-          console.log(name);
-
-          results.push({
-            // TODO: get card count
-            cardCount: 1,
-            id,
-            name,
-            // TODO: get packs
-            packs: [],
-            // TODO: get release date
-            releaseDate: null,
-            series,
+          const { cardCount, id, name, releaseDate } = BoosterPackSetParser.parsePackSetRow({
+            row,
           });
+
+          results.push(
+            BoosterPackSet.parse({
+              cardCount,
+              id,
+              name,
+              // TODO: get packs
+              packs: [
+                {
+                  cards: [
+                    {
+                      name: 'x',
+                      rarity: CCard.Rarity.CROWN_1,
+                    },
+                  ],
+                  name: 'x',
+                },
+              ],
+              releaseDate,
+              series,
+            } as BoosterPackSet),
+          );
           break;
         }
         default: {
-          throw new Error("unexpected cell count");
+          throw new Error('unexpected cell count');
         }
       }
     }
