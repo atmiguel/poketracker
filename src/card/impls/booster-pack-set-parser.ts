@@ -143,8 +143,20 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
           }
 
           assert(series !== null);
-          const { name } = BoosterPackSetParser.parsePackSetRow({ row });
+          const { id, name } = BoosterPackSetParser.parsePackSetRow({ row });
           console.log(name);
+
+          results.push({
+            // TODO: get card count
+            cardCount: 1,
+            id,
+            name,
+            // TODO: get packs
+            packs: [],
+            // TODO: get release date
+            releaseDate: null,
+            series,
+          });
           break;
         }
         default: {
