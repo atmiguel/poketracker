@@ -4,6 +4,7 @@ export const NonEmptyString = z.string().trim().nonempty();
 
 export const Integer = z.number().int();
 export const PositiveInteger = Integer.positive();
+export const NonNegativeInteger = Integer.nonnegative();
 
 export const IntegerString = NonEmptyString.transform((s) => Number.parseInt(s));
 export const PositiveIntegerString = IntegerString.pipe(PositiveInteger);
