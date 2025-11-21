@@ -1,5 +1,5 @@
 import { BoardState } from "../models/board-state";
-import { printTable, Table } from 'console-table-printer';
+import { Table } from 'console-table-printer';
 import { GAME_PIECE_TYPES, GamePiece } from "../models/game-piece";
 import { MELEE_CHARACTERS } from "../models/melee-character";
 import { TEAMS } from "../models/team";
