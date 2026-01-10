@@ -1,7 +1,7 @@
 import assert from 'assert';
-import type { Nullable } from '../../core/types/builtin';
+import type { Nullable } from '../../core/types';
 import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parser';
-import { BoosterPackSet } from '../models/booster-pack-set';
+import { BoosterPackSet } from '../types';
 import { load } from 'cheerio';
 import { PositiveIntegerString } from '../../core/zod/types';
 import { parse, isValid } from 'date-fns';

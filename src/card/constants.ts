@@ -1,19 +1,13 @@
 import { CCore } from '../core/constants';
-import { Path as TPath } from '../core/path/types';
-import { CARD_RARITY_SYMBOLS, type CardRarity } from './models/card-rarity';
+import { Path } from '../core/path/types';
+import { CARD_RARITY_SYMBOLS, type CardRarity } from './types';
 
 export namespace CCard {
-  export namespace Url {
-    const base = 'https://pocket.limitlesstcg.com';
+  const baseUrl = 'https://pocket.limitlesstcg.com';
+  export const BOOSTER_PACK_SETS_URL = `${baseUrl}/cards`;
 
-    export const BOOSTER_PACK_SETS = `${base}/cards`;
-  }
-
-  export namespace Path {
-    const base = TPath.create(`${CCore.Path.RESOURCES}/card-html`);
-
-    export const BOOSTER_PACK_SETS = TPath.create(`${base}/booster-pack-sets.html`);
-  }
+  const basePath = Path.create(`${CCore.RESOURCES_PATH}/card-html`);
+  export const BOOSTER_PACK_SETS_PATH = Path.create(`${basePath}/booster-pack-sets.html`);
 
   export namespace Rarity {
     export const DIAMOND_1: CardRarity = {
