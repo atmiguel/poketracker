@@ -2,15 +2,15 @@ import * as z from 'zod';
 import { NonEmptyArray, NonEmptyString, PositiveInteger } from '../core/zod/types';
 import { UObject } from '../core/object/utils';
 
-export const CardRaritySymbol = z.enum(['crown', 'diamond', 'shiny', 'star']);
+export const CardRaritySymbol = z.enum(['Crown', 'Diamond', 'Shiny', 'Star']);
 export type CardRaritySymbol = z.infer<typeof CardRaritySymbol>;
 export const CARD_RARITY_SYMBOLS = CardRaritySymbol.enum;
 
 const MAX_COUNTS_BY_SYMBOL: Record<CardRaritySymbol, number> = {
-  crown: 1,
-  diamond: 4,
-  shiny: 2,
-  star: 3,
+  Crown: 1,
+  Diamond: 4,
+  Shiny: 2,
+  Star: 3,
 };
 export const CardRarity = z
   .object({

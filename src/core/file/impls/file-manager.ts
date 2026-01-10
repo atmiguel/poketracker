@@ -8,7 +8,7 @@ import { dirname } from 'path';
 import type { IFileReader } from '../interfaces/file-reader';
 import { UCore } from '../../utils';
 
-export class FileManager implements IFileChecker,IFileReader, IFileWriter  {
+export class FileManager implements IFileChecker, IFileReader, IFileWriter {
   private static instance: Nullable<FileManager> = null;
 
   private constructor() {}
