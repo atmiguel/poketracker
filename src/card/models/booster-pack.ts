@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { NonEmptyArray, NonEmptyString } from '../../core/types/zod';
+import { NonEmptyArray, NonEmptyString } from '../../core/zod/types';
 import { Card } from './card';
 
 export const BoosterPack = z.object({

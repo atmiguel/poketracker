@@ -1,5 +1,5 @@
 import { CCore } from '../core/constants';
-import { Path as TPath } from '../core/types/path';
+import { Path as TPath } from '../core/path/types';
 import { CARD_RARITY_SYMBOLS, type CardRarity } from './models/card-rarity';
 
 export namespace CCard {

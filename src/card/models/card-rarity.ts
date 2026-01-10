@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { PositiveInteger } from '../../core/types/zod';
+import { PositiveInteger } from '../../core/zod/types';
 import { getRequiredValue } from '../../core/object/utils';
 
 export const CardRaritySymbol = z.enum(['crown', 'diamond', 'shiny', 'star']);

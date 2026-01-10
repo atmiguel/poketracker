@@ -1,4 +1,4 @@
-import type { Path } from '../../types/path';
+import type { Path } from '../../path/types';
 
 export interface IFileWriter {
   writeToFile: (params: {

@@ -1,7 +1,5 @@
-import { Path as TPath } from './types/path';
+import { Path as TPath } from './path/types';
 
 export namespace CCore {
-  export namespace Path {
-    export const RESOURCES = TPath.create('./resources');
-  }
+  export const RESOURCES_PATH = TPath.create('./resources');
 }

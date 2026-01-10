@@ -3,7 +3,7 @@ import type { Nullable } from '../../core/types/builtin';
 import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parser';
 import { BoosterPackSet } from '../models/booster-pack-set';
 import { load } from 'cheerio';
-import { PositiveIntegerString } from '../../core/types/zod';
+import { PositiveIntegerString } from '../../core/zod/types';
 import { parse, isValid } from 'date-fns';
 import { CCard } from '../constants';
 

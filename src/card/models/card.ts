@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { NonEmptyString } from '../../core/types/zod';
+import { NonEmptyString } from '../../core/zod/types';
 import { CardRarity } from './card-rarity';
 
 export const Card = z.object({
