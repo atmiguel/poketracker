@@ -43,3 +43,4 @@ Utils should contain a namespace with functions. The namespace should be prefixe
 ### Function Definition
 
 - No default parameters bro
+- enums values are PascalCase

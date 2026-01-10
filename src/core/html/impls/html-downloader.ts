@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import type { IHtmlDownloader } from '../interfaces/html-downloader';
-import type { Nullable } from '../../types/builtin';
+import type { Nullable } from '../../types';
 import type { IFileWriter } from '../../file/interfaces/file-writer';
 import { FileManager } from '../../file/impls/file-manager';
 
@@ -28,21 +28,17 @@ export class HtmlDownloader implements IHtmlDownloader {
     return HtmlDownloader.instance;
   };
 
-  public readonly downloadHtml: IHtmlDownloader['downloadHtml'] = async ({
+  public readonly downloadHtmlToFile: IHtmlDownloader['downloadHtmlToFile'] = async ({
+    mode,
     path,
-    options,
     url,
   }): Promise<void> => {
-    const { shouldOverwrite = false } = options ?? {};
-
     const { data } = await axios.get(url);
 
     await this.fileWriter.writeToFile({
       contents: data,
+      mode,
       path,
-      options: {
-        shouldOverwrite,
-      },
     });
   };
 }

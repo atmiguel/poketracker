@@ -1,4 +1,4 @@
-import type { Nullable } from '../../types/builtin';
+import type { Nullable } from '../../types';
 import type { ILogger } from '../interfaces/logger';
 
 class Logger implements ILogger {
@@ -14,13 +14,8 @@ class Logger implements ILogger {
     return Logger.instance;
   };
 
-  public readonly info: ILogger['info'] = (contents, options): void => {
-    const { withoutNewline = false } = options ?? {};
-
+  public readonly info: ILogger['info'] = (contents): void => {
     process.stdout.write(contents);
-    if (!withoutNewline) {
-      process.stdout.write('\n');
-    }
   };
 }
 

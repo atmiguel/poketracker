@@ -1,11 +1,10 @@
 import type { Path } from '../../path/types';
+import type { FileWriteMode } from '../types';
 
 export interface IFileWriter {
   writeToFile: (params: {
     contents: string;
+    mode: FileWriteMode;
     path: Path;
-    options?: {
-      shouldOverwrite?: boolean;
-    };
   }) => Promise<void>;
 }
