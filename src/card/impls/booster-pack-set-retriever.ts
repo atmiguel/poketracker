@@ -10,6 +10,7 @@ import { FILE_WRITE_MODES } from '../../core/file/types';
 import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import { FileManager } from '../../core/file/impls/file-manager';
 import type { IBoosterPackRetriever } from '../interfaces/booster-pack-retriever';
+import { BoosterPackRetriever } from './booster-pack-retriever';
 
 export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
   private static instance: Nullable<BoosterPackSetRetriever> = null;

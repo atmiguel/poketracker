@@ -6,8 +6,8 @@ export namespace CCard {
   const baseUrl = 'https://pocket.limitlesstcg.com';
   export const BOOSTER_PACK_SETS_URL = `${baseUrl}/cards`;
 
-  const basePath = Path.create(`${CCore.RESOURCES_PATH}/card-html`);
-  export const BOOSTER_PACK_SETS_PATH = Path.create(`${basePath}/booster-pack-sets.html`);
+  export const BASE_PATH = Path.create(`${CCore.RESOURCES_PATH}/card-html`);
+  export const BOOSTER_PACK_SETS_PATH = Path.create(`${BASE_PATH}/booster-pack-sets.html`);
 
   export namespace Rarity {
     export const DIAMOND_1: CardRarity = {
