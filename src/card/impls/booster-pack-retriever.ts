@@ -31,6 +31,7 @@ export class BoosterPackRetriever implements IBoosterPackRetriever {
   }) => {
     const path = CardUtils.getBoosterPackSetPath({ packSetId });
 
+    // TODO: Merge html downloaer and file reader
     await this.htmlDownloader.downloadHtmlToFile({
       mode: FILE_WRITE_MODES.DoNotOverwrite,
       path,
