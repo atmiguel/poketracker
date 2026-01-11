@@ -9,20 +9,24 @@ import { HtmlDownloader } from '../../core/html/impls/html-downloader';
 import { FILE_WRITE_MODES } from '../../core/file/types';
 import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import { FileManager } from '../../core/file/impls/file-manager';
+import type { IBoosterPackRetriever } from '../interfaces/booster-pack-retriever';
 
 export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
   private static instance: Nullable<BoosterPackSetRetriever> = null;
 
   private readonly boosterPackSetParser: IBoosterPackSetParser;
+  private readonly boosterPackRetriever: IBoosterPackRetriever;
   private readonly fileReader: IFileReader;
   private readonly htmlDownloader: IHtmlDownloader;
 
   private constructor(params: {
     boosterPackSetParser: IBoosterPackSetParser;
+    boosterPackRetriever: IBoosterPackRetriever;
     fileReader: IFileReader;
     htmlDownloader: IHtmlDownloader;
   }) {
     this.boosterPackSetParser = params.boosterPackSetParser;
+    this.boosterPackRetriever = params.boosterPackRetriever;
     this.fileReader = params.fileReader;
     this.htmlDownloader = params.htmlDownloader;
   }
@@ -31,6 +35,7 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
     if (BoosterPackSetRetriever.instance === null) {
       BoosterPackSetRetriever.instance = new BoosterPackSetRetriever({
         boosterPackSetParser: BoosterPackSetParser.getInstance(),
+        boosterPackRetriever: BoosterPackRetriever.getInstance(),
         fileReader: FileManager.getInstance(),
         htmlDownloader: HtmlDownloader.getInstance(),
       });
@@ -41,28 +46,30 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
 
   public readonly retrieveBoosterPackSets: IBoosterPackSetRetriever['retrieveBoosterPackSets'] =
     async ({}) => {
+      const path = CCard.BOOSTER_PACK_SETS_PATH;
+
       await this.htmlDownloader.downloadHtmlToFile({
         mode: FILE_WRITE_MODES.DoNotOverwrite,
-        path: CCard.BOOSTER_PACK_SETS_PATH,
+        path,
         url: CCard.BOOSTER_PACK_SETS_URL,
       });
       const { contents } = await this.fileReader.readFromFile({
-        path: CCard.BOOSTER_PACK_SETS_PATH,
+        path,
       });
       const { parsedBoosterPackSets } = this.boosterPackSetParser.parseBoosterPackSets({
         data: contents,
       });
 
-      // TODO parse packs
+      const boosterPackSets: Array<BoosterPackSet> = await Promise.all(parsedBoosterPackSets.map(
+        async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
+          const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({ packSetId: parsedBoosterPackSet.id });
 
-      const boosterPackSets: Array<BoosterPackSet> = parsedBoosterPackSets.map(
-        (parsedBoosterPackSet): BoosterPackSet => {
           return {
             ...parsedBoosterPackSet,
-            packs: [],
+            packs: boosterPacks,
           };
         },
-      );
+      ));
 
       return { boosterPackSets };
     };

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { NonEmptyArray, NonEmptyString, PositiveInteger } from '../core/zod/types';
+import { NonEmptyArray, NonEmptyString, NonNegativeInteger, PositiveInteger } from '../core/zod/types';
 import { UObject } from '../core/object/utils';
 
 export const CardRaritySymbol = z.enum(['Crown', 'Diamond', 'Shiny', 'Star']);
@@ -25,6 +25,7 @@ export type CardRarity = z.infer<typeof CardRarity>;
 
 export const Card = z.strictObject({
   name: NonEmptyString,
+  number: NonNegativeInteger,
   rarity: CardRarity,
 });
 export type Card = z.infer<typeof Card>;
