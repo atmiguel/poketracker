@@ -5,6 +5,7 @@ export namespace CoreInstances {
   export const fileManager = new FileManager();
 
   export const htmlDownloader = new HtmlDownloader({
+    fileChecker: fileManager,
     fileWriter: fileManager,
   });
 }

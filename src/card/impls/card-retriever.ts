@@ -1,5 +1,5 @@
-import type { IHtmlDownloader } from '../../core/html/interfaces/html-downloader';
-import { FILE_WRITE_MODES } from '../../core/file/types';
+import type { IHtmlAccessor } from '../../core/html/interfaces/html-downloader';
+import { FILE_WRITE_MODES } from '../../core/html/types';
 import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import { CardUtils } from '../utils';
 import type { Card } from '../types';
@@ -10,12 +10,12 @@ import { CoreUtils } from '../../core/utils';
 export class CardRetriever implements ICardRetriever {
   private readonly cardParser: ICardParser;
   private readonly fileReader: IFileReader;
-  private readonly htmlDownloader: IHtmlDownloader;
+  private readonly htmlDownloader: IHtmlAccessor;
 
   public constructor(params: {
     cardParser: ICardParser;
     fileReader: IFileReader;
-    htmlDownloader: IHtmlDownloader;
+    htmlDownloader: IHtmlAccessor;
   }) {
     this.cardParser = params.cardParser;
     this.fileReader = params.fileReader;

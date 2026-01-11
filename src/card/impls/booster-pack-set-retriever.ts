@@ -2,23 +2,23 @@ import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parse
 import { BoosterPackSet } from '../types';
 import { CardConstants } from '../constants';
 import type { IBoosterPackSetRetriever } from '../interfaces/booster-pack-set-retriever';
-import type { IHtmlDownloader } from '../../core/html/interfaces/html-downloader';
-import { FILE_WRITE_MODES } from '../../core/file/types';
+import type { IHtmlAccessor } from '../../core/html/interfaces/html-downloader';
 import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import type { IBoosterPackRetriever } from '../interfaces/booster-pack-retriever';
 import { SortUtils } from '../../core/sort/utils';
+import { FILE_WRITE_MODES } from '../../core/html/types';
 
 export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
   private readonly boosterPackSetParser: IBoosterPackSetParser;
   private readonly boosterPackRetriever: IBoosterPackRetriever;
   private readonly fileReader: IFileReader;
-  private readonly htmlDownloader: IHtmlDownloader;
+  private readonly htmlDownloader: IHtmlAccessor;
 
   public constructor(params: {
     boosterPackSetParser: IBoosterPackSetParser;
     boosterPackRetriever: IBoosterPackRetriever;
     fileReader: IFileReader;
-    htmlDownloader: IHtmlDownloader;
+    htmlDownloader: IHtmlAccessor;
   }) {
     this.boosterPackSetParser = params.boosterPackSetParser;
     this.boosterPackRetriever = params.boosterPackRetriever;
@@ -44,12 +44,11 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
 
       const boosterPackSets: Array<BoosterPackSet> = [];
       for (const parsedBoosterPackSet of SortUtils.sortByString(parsedBoosterPackSets, ({ id }) => id)) {
-        process.stdout.write(`Retrieving booster pack set ${parsedBoosterPackSet.id}...`);
+        console.log(`Retrieving booster pack set ${parsedBoosterPackSet.id}...`);
         const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({
           cardCount: parsedBoosterPackSet.cardCount,
           packSetId: parsedBoosterPackSet.id,
         });
-        process.stdout.write('done\n');
 
         boosterPackSets.push({
           ...parsedBoosterPackSet,

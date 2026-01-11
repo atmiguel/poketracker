@@ -1,6 +1,11 @@
 import assert from 'assert';
 import { load } from 'cheerio';
 import type { Nullable } from '../types';
+import z from 'zod';
+
+export const FileWriteMode = z.enum(['DoNotOverwrite', 'OverwriteIfExists']);
+export type FileWriteMode = z.infer<typeof FileWriteMode>;
+export const FILE_WRITE_MODES = FileWriteMode.enum;
 
 export class HtmlElement {
   private readonly element: cheerio.Element;
