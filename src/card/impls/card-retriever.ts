@@ -1,0 +1,71 @@
+import type { IHtmlDownloader } from '../../core/html/interfaces/html-downloader';
+import { FILE_WRITE_MODES } from '../../core/file/types';
+import type { IFileReader } from '../../core/file/interfaces/file-reader';
+import { CardUtils } from '../utils';
+import type { Card } from '../types';
+import type { ICardRetriever } from '../interfaces/card-retriever';
+import type { ICardParser } from '../interfaces/card-parser';
+import { CoreUtils } from '../../core/utils';
+
+export class CardRetriever implements ICardRetriever {
+  private readonly cardParser: ICardParser;
+  private readonly fileReader: IFileReader;
+  private readonly htmlDownloader: IHtmlDownloader;
+
+  public constructor(params: {
+    cardParser: ICardParser;
+    fileReader: IFileReader;
+    htmlDownloader: IHtmlDownloader;
+  }) {
+    this.cardParser = params.cardParser;
+    this.fileReader = params.fileReader;
+    this.htmlDownloader = params.htmlDownloader;
+  }
+
+  public readonly retrieveCard: ICardRetriever['retrieveCard'] = async ({
+    cardNumber,
+    packSetId,
+  }) => {
+    const path = CardUtils.getCardPath({ cardNumber, packSetId });
+
+    await this.htmlDownloader.downloadHtmlToFile({
+      mode: FILE_WRITE_MODES.DoNotOverwrite,
+      path,
+      url: CardUtils.getCardUrl({ cardNumber, packSetId }),
+    });
+    const { contents } = await this.fileReader.readFromFile({
+      path,
+    });
+
+    const { parsedCard } = this.cardParser.parseCard({
+      data: contents,
+    });
+    return { parsedCard };
+  };
+
+  public readonly retrieveCards: ICardRetriever['retrieveCards'] = async ({
+    cardCount,
+    packName,
+    packSetId,
+  }) => {
+    const cards: Array<Card> = [];
+    for (const cardNumber of CoreUtils.range(cardCount).map((o) => o + 1)) {
+      const { parsedCard } = await this.retrieveCard({
+        cardNumber,
+        packSetId,
+      });
+
+      if (parsedCard.packName === null || parsedCard.packName === packName) {
+        const { name, number, rarity } = parsedCard;
+
+        cards.push({
+          name,
+          number,
+          rarity,
+        });
+      }
+    }
+
+    return { cards };
+  };
+}

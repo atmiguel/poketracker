@@ -44,6 +44,7 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
       const boosterPackSets: Array<BoosterPackSet> = await Promise.all(
         parsedBoosterPackSets.map(async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
           const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({
+            cardCount: parsedBoosterPackSet.cardCount,
             packSetId: parsedBoosterPackSet.id,
           });
 

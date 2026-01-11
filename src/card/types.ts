@@ -35,11 +35,21 @@ export const Card = z.strictObject({
 });
 export type Card = z.infer<typeof Card>;
 
+export const ParsedCard = Card.safeExtend({
+  packName: z.nullable(NonEmptyString),
+});
+export type ParsedCard = z.infer<typeof ParsedCard>;
+
 export const BoosterPack = z.strictObject({
   cards: NonEmptyArray(Card),
   name: z.nullable(NonEmptyString),
 });
 export type BoosterPack = z.infer<typeof BoosterPack>;
+
+export const ParsedBoosterPack = BoosterPack.omit({
+  cards: true,
+});
+export type ParsedBoosterPack = z.infer<typeof ParsedBoosterPack>;
 
 export const BoosterPackSet = z.strictObject({
   cardCount: PositiveInteger,
@@ -50,11 +60,6 @@ export const BoosterPackSet = z.strictObject({
   series: NonEmptyString,
 });
 export type BoosterPackSet = z.infer<typeof BoosterPackSet>;
-
-export const ParsedBoosterPack = BoosterPack.omit({
-  cards: true,
-});
-export type ParsedBoosterPack = z.infer<typeof ParsedBoosterPack>;
 
 export const ParsedBoosterPackSet = BoosterPackSet.omit({
   packs: true,

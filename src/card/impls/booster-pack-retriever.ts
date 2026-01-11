@@ -26,6 +26,7 @@ export class BoosterPackRetriever implements IBoosterPackRetriever {
   }
 
   public readonly retrieveBoosterPacks: IBoosterPackRetriever['retrieveBoosterPacks'] = async ({
+    cardCount,
     packSetId,
   }) => {
     const path = CardUtils.getBoosterPackSetPath({ packSetId });
@@ -42,11 +43,10 @@ export class BoosterPackRetriever implements IBoosterPackRetriever {
       data: contents,
     });
 
-    console.log(parsedBoosterPacks);
-
     const boosterPacks: Array<BoosterPack> = await Promise.all(
       parsedBoosterPacks.map(async (parsedBoosterPack): Promise<BoosterPack> => {
         const { cards } = await this.cardRetriever.retrieveCards({
+          cardCount,
           packSetId,
           packName: parsedBoosterPack.name,
         });
