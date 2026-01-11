@@ -7,17 +7,7 @@ import { parse, isValid } from 'date-fns';
 import { HtmlElement } from '../../core/html/types';
 
 export class BoosterPackSetParser implements IBoosterPackSetParser {
-  private static instance: Nullable<BoosterPackSetParser> = null;
-
-  private constructor() {}
-
-  public static readonly getInstance = (): BoosterPackSetParser => {
-    if (BoosterPackSetParser.instance === null) {
-      BoosterPackSetParser.instance = new BoosterPackSetParser();
-    }
-
-    return BoosterPackSetParser.instance;
-  };
+  public constructor() {}
 
   private static readonly parseSeriesRow = ({ row }: { row: HtmlElement }): { series: string } => {
     const cells = row.getChildren();

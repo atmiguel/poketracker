@@ -17,6 +17,7 @@ With the exception of scripts, all files must be one of the following types:
 - types
 - constants
 - utils
+- instances
 
 ### Interface
 
@@ -32,11 +33,15 @@ Types contain any utility types or objects specifically intended to assist with 
 
 ### Constants
 
-Constants contain any constant values needed. The files should be named `constants.ts`. The constants should be namespaced within a `C` prefixed namespace matching the scope (e.g. `CCore`).
+Constants contain any constant values needed. The files should be named `constants.ts`. The constants should be namespaced within a `Constants` suffixed namespace matching the scope (e.g. `CoreConstants`).
 
 ### Utils
 
-Utils should contain a namespace with functions. The namespace should be prefixed with `U` and the file should be named `utils.ts`.
+Utils should contain a namespace with functions. The namespace should be suffixed with `Utils` and the file should be named `utils.ts`.
+
+### Instances
+
+Contains instances of implementations. Must have namespace suffixed with `Instances` and be in a file named `instances.ts`.
 
 ## Conventions
 

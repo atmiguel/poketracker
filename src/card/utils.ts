@@ -1,12 +1,12 @@
 import { Path } from "../core/path/types";
-import { CCard } from "./constants";
+import { CardConstants } from "./constants";
 
-export namespace UCard {
+export namespace CardUtils {
   export const getBoosterPackSetUrl = ({packSetId}: {packSetId: string}): string => {
-    return `${CCard.BOOSTER_PACK_SETS_URL}/${packSetId}`;
+    return `${CardConstants.BOOSTER_PACK_SETS_URL}/${packSetId}`;
   };
 
   export const getBoosterPackSetPath = ({packSetId}: {packSetId: string}): Path => {
-    return Path.create(`${CCard.BASE_PATH}/booster-pack-set/${packSetId}.html`);
+    return Path.create(`${CardConstants.BASE_PATH}/booster-pack-set/${packSetId}.html`);
   };
 }

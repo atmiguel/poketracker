@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { NonEmptyArray, NonEmptyString, NonNegativeInteger, PositiveInteger } from '../core/zod/types';
-import { UObject } from '../core/object/utils';
+import { ObjectUtils } from '../core/object/utils';
 
 export const CardRaritySymbol = z.enum(['Crown', 'Diamond', 'Shiny', 'Star']);
 export type CardRaritySymbol = z.infer<typeof CardRaritySymbol>;
@@ -18,7 +18,7 @@ export const CardRarity = z
     symbol: CardRaritySymbol,
   })
   .refine(({ count, symbol }) => {
-    const maxCount = UObject.getRequiredValue(MAX_COUNTS_BY_SYMBOL, symbol);
+    const maxCount = ObjectUtils.getRequiredValue(MAX_COUNTS_BY_SYMBOL, symbol);
     return count <= maxCount;
   });
 export type CardRarity = z.infer<typeof CardRarity>;

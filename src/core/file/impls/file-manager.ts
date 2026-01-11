@@ -1,25 +1,13 @@
 import { access, mkdir, readFile, writeFile } from 'fs/promises';
 
-import type { Nullable } from '../../types';
 import type { IFileChecker } from '../interfaces/file-checker';
 import type { IFileWriter } from '../interfaces/file-writer';
-import { LOGGER } from '../../log/impls/logger';
 import { dirname } from 'path';
 import type { IFileReader } from '../interfaces/file-reader';
-import { UCore } from '../../utils';
+import { CoreUtils } from '../../utils';
 
 export class FileManager implements IFileChecker, IFileReader, IFileWriter {
-  private static instance: Nullable<FileManager> = null;
-
-  private constructor() {}
-
-  public static readonly getInstance = (): FileManager => {
-    if (FileManager.instance === null) {
-      FileManager.instance = new FileManager();
-    }
-
-    return FileManager.instance;
-  };
+  public constructor() {}
 
   public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
     path,
@@ -52,7 +40,7 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
         const { fileExists } = await this.checkFileExists({ path });
 
         if (fileExists) {
-          LOGGER.info(`File already exists at ${path}, not overwriting.\n`);
+          process.stdout.write(`File already exists at ${path}, not overwriting.\n`);
 
           return;
         } else {
@@ -66,15 +54,15 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
         break;
       }
       default: {
-        UCore.assertNever(mode);
+        CoreUtils.assertNever(mode);
       }
     }
 
-    LOGGER.info(`Writing to ${path}...`);
+    process.stdout.write(`Writing to ${path}...`);
 
     await mkdir(dirname(path.toString()), { recursive: true });
     await writeFile(path.toString(), contents);
 
-    LOGGER.info('done\n');
+    process.stdout.write('done\n');
   };
 }
