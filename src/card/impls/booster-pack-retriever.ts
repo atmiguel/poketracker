@@ -4,18 +4,23 @@ import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import type { IBoosterPackRetriever } from '../interfaces/booster-pack-retriever';
 import { CardUtils } from '../utils';
 import type { IBoosterPackParser } from '../interfaces/booster-pack-parser';
+import type { BoosterPack } from '../types';
+import type { ICardRetriever } from '../interfaces/card-retriever';
 
 export class BoosterPackRetriever implements IBoosterPackRetriever {
   private readonly boosterPackParser: IBoosterPackParser;
+  private readonly cardRetriever: ICardRetriever;
   private readonly fileReader: IFileReader;
   private readonly htmlDownloader: IHtmlDownloader;
 
   public constructor(params: {
     boosterPackParser: IBoosterPackParser;
+    cardRetriever: ICardRetriever;
     fileReader: IFileReader;
     htmlDownloader: IHtmlDownloader;
   }) {
     this.boosterPackParser = params.boosterPackParser;
+    this.cardRetriever = params.cardRetriever;
     this.fileReader = params.fileReader;
     this.htmlDownloader = params.htmlDownloader;
   }
@@ -39,17 +44,20 @@ export class BoosterPackRetriever implements IBoosterPackRetriever {
 
     console.log(parsedBoosterPacks);
 
-    // const boosterPackSets: Array<BoosterPackSet> = await Promise.all(parsedBoosterPackSets.map(
-    //   async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
-    //     const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({ packSetId: parsedBoosterPackSet.id });
+    const boosterPacks: Array<BoosterPack> = await Promise.all(
+      parsedBoosterPacks.map(async (parsedBoosterPack): Promise<BoosterPack> => {
+        const { cards } = await this.cardRetriever.retrieveCards({
+          packSetId,
+          packName: parsedBoosterPack.name,
+        });
 
-    //     return {
-    //       ...parsedBoosterPackSet,
-    //       packs: boosterPacks,
-    //     };
-    //   },
-    // ));
+        return {
+          ...parsedBoosterPack,
+          cards,
+        };
+      }),
+    );
 
-    return { boosterPacks: [] };
+    return { boosterPacks };
   };
 }

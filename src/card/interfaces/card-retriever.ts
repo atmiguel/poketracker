@@ -1,5 +1,9 @@
-import type { BoosterPack } from '../types';
+import type { Nullable } from '../../core/types';
+import type { Card } from '../types';
 
 export interface ICardRetriever {
-  retrieveCards: (params: { packSetId: string }) => Promise<{ boosterPacks: Array<BoosterPack> }>;
+  retrieveCards: (params: {
+    packName: Nullable<string>;
+    packSetId: string;
+  }) => Promise<{ cards: Array<Card> }>;
 }
