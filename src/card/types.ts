@@ -46,6 +46,11 @@ export const BoosterPackSet = z.strictObject({
 });
 export type BoosterPackSet = z.infer<typeof BoosterPackSet>;
 
+export const ParsedBoosterPack = BoosterPack.omit({
+  cards: true,
+});
+export type ParsedBoosterPack = z.infer<typeof ParsedBoosterPack>;
+
 export const ParsedBoosterPackSet = BoosterPackSet.omit({
   packs: true,
 });
