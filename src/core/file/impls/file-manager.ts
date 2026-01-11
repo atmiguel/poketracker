@@ -40,8 +40,7 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
         const { fileExists } = await this.checkFileExists({ path });
 
         if (fileExists) {
-          process.stdout.write(`File already exists at ${path}, not overwriting.\n`);
-
+          // process.stdout.write(`File already exists at ${path}, not overwriting.\n`);
           return;
         } else {
           // Doesn't exist so we'll write to it
