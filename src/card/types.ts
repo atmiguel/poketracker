@@ -13,7 +13,7 @@ const MAX_COUNTS_BY_SYMBOL: Record<CardRaritySymbol, number> = {
   Star: 3,
 };
 export const CardRarity = z
-  .object({
+  .strictObject({
     count: PositiveInteger,
     symbol: CardRaritySymbol,
   })
@@ -23,19 +23,19 @@ export const CardRarity = z
   });
 export type CardRarity = z.infer<typeof CardRarity>;
 
-export const Card = z.object({
+export const Card = z.strictObject({
   name: NonEmptyString,
   rarity: CardRarity,
 });
 export type Card = z.infer<typeof Card>;
 
-export const BoosterPack = z.object({
+export const BoosterPack = z.strictObject({
   cards: NonEmptyArray(Card),
   name: z.nullable(NonEmptyString),
 });
 export type BoosterPack = z.infer<typeof BoosterPack>;
 
-export const BoosterPackSet = z.object({
+export const BoosterPackSet = z.strictObject({
   cardCount: PositiveInteger,
   id: NonEmptyString,
   name: NonEmptyString,
@@ -44,3 +44,8 @@ export const BoosterPackSet = z.object({
   series: NonEmptyString,
 });
 export type BoosterPackSet = z.infer<typeof BoosterPackSet>;
+
+export const ParsedBoosterPackSet = BoosterPackSet.omit({
+  packs: true,
+});
+export type ParsedBoosterPackSet = z.infer<typeof ParsedBoosterPackSet>;

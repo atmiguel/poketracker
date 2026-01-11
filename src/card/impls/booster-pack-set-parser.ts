@@ -1,10 +1,9 @@
 import assert from 'assert';
 import type { Nullable } from '../../core/types';
 import type { IBoosterPackSetParser } from '../interfaces/booster-pack-set-parser';
-import { BoosterPackSet } from '../types';
+import { ParsedBoosterPackSet } from '../types';
 import { PositiveIntegerString } from '../../core/zod/types';
 import { parse, isValid } from 'date-fns';
-import { CCard } from '../constants';
 import { HtmlElement } from '../../core/html/types';
 
 export class BoosterPackSetParser implements IBoosterPackSetParser {
@@ -95,11 +94,11 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
 
   public readonly parseBoosterPackSets: IBoosterPackSetParser['parseBoosterPackSets'] = ({
     data,
-  }): Array<BoosterPackSet> => {
+  }) => {
     const rootElement = HtmlElement.create({ data });
     const setsTable = rootElement.findOne('.sets-table');
 
-    const results: Array<BoosterPackSet> = [];
+    const parsedBoosterPackSets: Array<ParsedBoosterPackSet> = [];
     let series: Nullable<string> = null;
     for (const row of setsTable.findMany('tr')) {
       const cells = row.getChildren();
@@ -122,26 +121,14 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
             row,
           });
 
-          results.push(
-            BoosterPackSet.parse({
+          parsedBoosterPackSets.push(
+            ParsedBoosterPackSet.parse({
               cardCount,
               id,
               name,
-              // TODO: get packs
-              packs: [
-                {
-                  cards: [
-                    {
-                      name: 'x',
-                      rarity: CCard.Rarity.CROWN_1,
-                    },
-                  ],
-                  name: 'x',
-                },
-              ],
               releaseDate,
               series,
-            } as BoosterPackSet),
+            } as ParsedBoosterPackSet),
           );
           break;
         }
@@ -151,6 +138,6 @@ export class BoosterPackSetParser implements IBoosterPackSetParser {
       }
     }
 
-    return results;
+    return { parsedBoosterPackSets };
   };
 }

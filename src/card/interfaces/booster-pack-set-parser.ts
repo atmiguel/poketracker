@@ -1,5 +1,7 @@
-import type { BoosterPackSet } from '../types';
+import type { ParsedBoosterPackSet } from '../types';
 
 export interface IBoosterPackSetParser {
-  parseBoosterPackSets: (params: { data: string }) => Array<BoosterPackSet>;
+  parseBoosterPackSets: (params: { data: string }) => {
+    parsedBoosterPackSets: Array<ParsedBoosterPackSet>;
+  };
 }

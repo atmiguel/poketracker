@@ -17,9 +17,11 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
   private readonly fileReader: IFileReader;
   private readonly htmlDownloader: IHtmlDownloader;
 
-  private constructor(params: {boosterPackSetParser: IBoosterPackSetParser; 
-  fileReader: IFileReader;
-    htmlDownloader: IHtmlDownloader}) {
+  private constructor(params: {
+    boosterPackSetParser: IBoosterPackSetParser;
+    fileReader: IFileReader;
+    htmlDownloader: IHtmlDownloader;
+  }) {
     this.boosterPackSetParser = params.boosterPackSetParser;
     this.fileReader = params.fileReader;
     this.htmlDownloader = params.htmlDownloader;
@@ -37,17 +39,31 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
     return BoosterPackSetRetriever.instance;
   };
 
-  public readonly retrieveBoosterPackSets: IBoosterPackSetRetriever['retrieveBoosterPackSets'] = async ({
-  }): Promise<Array<BoosterPackSet>> => {
-    await this.htmlDownloader.downloadHtmlToFile({
-      mode: FILE_WRITE_MODES.DoNotOverwrite,
-      path: CCard.BOOSTER_PACK_SETS_PATH,
-      url: CCard.BOOSTER_PACK_SETS_URL,
-    });
+  public readonly retrieveBoosterPackSets: IBoosterPackSetRetriever['retrieveBoosterPackSets'] =
+    async ({}) => {
+      await this.htmlDownloader.downloadHtmlToFile({
+        mode: FILE_WRITE_MODES.DoNotOverwrite,
+        path: CCard.BOOSTER_PACK_SETS_PATH,
+        url: CCard.BOOSTER_PACK_SETS_URL,
+      });
+      const { contents } = await this.fileReader.readFromFile({
+        path: CCard.BOOSTER_PACK_SETS_PATH,
+      });
+      const { parsedBoosterPackSets } = this.boosterPackSetParser.parseBoosterPackSets({
+        data: contents,
+      });
 
-    const { contents } = await this.fileReader.readFromFile({
-      path: CCard.BOOSTER_PACK_SETS_PATH,
-    });
-    const result = BoosterPackSetParser.getInstance().parseBoosterPackSets({ data: contents });
-  };
+      // TODO parse packs
+
+      const boosterPackSets: Array<BoosterPackSet> = parsedBoosterPackSets.map(
+        (parsedBoosterPackSet): BoosterPackSet => {
+          return {
+            ...parsedBoosterPackSet,
+            packs: [],
+          };
+        },
+      );
+
+      return { boosterPackSets };
+    };
 }
