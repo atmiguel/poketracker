@@ -41,16 +41,18 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
         data: contents,
       });
 
-      const boosterPackSets: Array<BoosterPackSet> = await Promise.all(parsedBoosterPackSets.map(
-        async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
-          const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({ packSetId: parsedBoosterPackSet.id });
+      const boosterPackSets: Array<BoosterPackSet> = await Promise.all(
+        parsedBoosterPackSets.map(async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
+          const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({
+            packSetId: parsedBoosterPackSet.id,
+          });
 
           return {
             ...parsedBoosterPackSet,
             packs: boosterPacks,
           };
-        },
-      ));
+        }),
+      );
 
       return { boosterPackSets };
     };

@@ -1,10 +1,10 @@
-import { BoosterPackSetRetriever } from '../card/impls/booster-pack-set-retriever';
+import { CardInstances } from '../card/instances';
 
 const main = async (): Promise<void> => {
-  const { boosterPackSets } = await BoosterPackSetRetriever.getInstance().retrieveBoosterPackSets(
+  const { boosterPackSets } = await CardInstances.boosterPackSetRetriever.retrieveBoosterPackSets(
     {},
   );
-  console.log(boosterPackSets);
+  // console.log(boosterPackSets);
 };
 
 main().catch((err) => {

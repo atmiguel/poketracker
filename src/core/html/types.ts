@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { load } from 'cheerio';
+import type { Nullable } from '../types';
 
 export class HtmlElement {
   private readonly element: cheerio.Element;
@@ -44,10 +45,26 @@ export class HtmlElement {
     return this.getElementArray(this.cheerio.children());
   };
 
-  public readonly findOne = (selector: string): HtmlElement => {
+  public readonly findNullableOne = (selector: string): Nullable<HtmlElement> => {
     const results = this.cheerio.find(selector);
-    assert(results.length === 1);
-    return this.createFromElement(results[0]!);
+
+    switch (results.length) {
+      case 0: {
+        return null;
+      }
+      case 1: {
+        return this.createFromElement(results[0]!);
+      }
+      default: {
+        throw new Error('expected no more than one element');
+      }
+    }
+  };
+
+  public readonly findOne = (selector: string): HtmlElement => {
+    const result = this.findNullableOne(selector);
+    assert(result !== null);
+    return result;
   };
 
   public readonly findMany = (selector: string): Array<HtmlElement> => {

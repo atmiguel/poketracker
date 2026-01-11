@@ -1,5 +1,10 @@
 import * as z from 'zod';
-import { NonEmptyArray, NonEmptyString, NonNegativeInteger, PositiveInteger } from '../core/zod/types';
+import {
+  NonEmptyArray,
+  NonEmptyString,
+  NonNegativeInteger,
+  PositiveInteger,
+} from '../core/zod/types';
 import { ObjectUtils } from '../core/object/utils';
 
 export const CardRaritySymbol = z.enum(['Crown', 'Diamond', 'Shiny', 'Star']);
