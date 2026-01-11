@@ -44,20 +44,19 @@ export class BoosterPackRetriever implements IBoosterPackRetriever {
       data: contents,
     });
 
-    const boosterPacks: Array<BoosterPack> = await Promise.all(
-      parsedBoosterPacks.map(async (parsedBoosterPack): Promise<BoosterPack> => {
-        const { cards } = await this.cardRetriever.retrieveCards({
-          cardCount,
-          packSetId,
-          packName: parsedBoosterPack.name,
-        });
+    const boosterPacks: Array<BoosterPack> = [];
+    for (const parsedBoosterPack of parsedBoosterPacks) {
+      const { cards } = await this.cardRetriever.retrieveCards({
+        cardCount,
+        packSetId,
+        packName: parsedBoosterPack.name,
+      });
 
-        return {
-          ...parsedBoosterPack,
-          cards,
-        };
-      }),
-    );
+      boosterPacks.push({
+        ...parsedBoosterPack,
+        cards,
+      });
+    }
 
     return { boosterPacks };
   };

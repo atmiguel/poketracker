@@ -6,6 +6,7 @@ import type { IHtmlDownloader } from '../../core/html/interfaces/html-downloader
 import { FILE_WRITE_MODES } from '../../core/file/types';
 import type { IFileReader } from '../../core/file/interfaces/file-reader';
 import type { IBoosterPackRetriever } from '../interfaces/booster-pack-retriever';
+import { SortUtils } from '../../core/sort/utils';
 
 export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
   private readonly boosterPackSetParser: IBoosterPackSetParser;
@@ -41,19 +42,20 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
         data: contents,
       });
 
-      const boosterPackSets: Array<BoosterPackSet> = await Promise.all(
-        parsedBoosterPackSets.map(async (parsedBoosterPackSet): Promise<BoosterPackSet> => {
-          const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({
-            cardCount: parsedBoosterPackSet.cardCount,
-            packSetId: parsedBoosterPackSet.id,
-          });
+      const boosterPackSets: Array<BoosterPackSet> = [];
+      for (const parsedBoosterPackSet of SortUtils.sortByString(parsedBoosterPackSets, ({ id }) => id)) {
+        process.stdout.write(`Retrieving booster pack set ${parsedBoosterPackSet.id}...`);
+        const { boosterPacks } = await this.boosterPackRetriever.retrieveBoosterPacks({
+          cardCount: parsedBoosterPackSet.cardCount,
+          packSetId: parsedBoosterPackSet.id,
+        });
+        process.stdout.write('done\n');
 
-          return {
-            ...parsedBoosterPackSet,
-            packs: boosterPacks,
-          };
-        }),
-      );
+        boosterPackSets.push({
+          ...parsedBoosterPackSet,
+          packs: boosterPacks,
+        });
+      }
 
       return { boosterPackSets };
     };
