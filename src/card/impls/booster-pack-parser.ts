@@ -8,17 +8,7 @@ import { HtmlElement } from '../../core/html/types';
 import type { IBoosterPackParser } from '../interfaces/booster-pack-parser';
 
 export class BoosterPackParser implements IBoosterPackParser {
-  private static instance: Nullable<BoosterPackParser> = null;
-
-  private constructor() {}
-
-  public static readonly getInstance = (): BoosterPackParser => {
-    if (BoosterPackParser.instance === null) {
-      BoosterPackParser.instance = new BoosterPackParser();
-    }
-
-    return BoosterPackParser.instance;
-  };
+  public constructor() {}
 
   private static readonly parseSeriesRow = ({ row }: { row: HtmlElement }): { series: string } => {
     const cells = row.getChildren();
