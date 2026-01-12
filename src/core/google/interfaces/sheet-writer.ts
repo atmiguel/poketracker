@@ -4,8 +4,8 @@ export interface ISheetWriter {
   insertSheet: (params: { index: number; name: string }) => Promise<void>;
 
   overwriteSheetData: (params: {
-    data: Array<Array<unknown>>;
     range: string;
-    sheetId: number;
+    rows: Array<Array<unknown>>;
+    sheetName: string;
   }) => Promise<void>;
 }

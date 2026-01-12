@@ -51,6 +51,16 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     return { sheets };
   };
 
+  public readonly readSheetData: ISheetReader['readSheetData'] = async ({ range, sheetName }) => {
+    const response = await this.sheetsApi.spreadsheets.values.get({
+      spreadsheetId: this.spreadsheetId,
+      range: `${sheetName}!${range}`,
+    });
+
+    const rows = response.data.values ?? [];
+    return { rows };
+  };
+
   public readonly addSheet: ISheetWriter['addSheet'] = async ({ name }) => {
     await this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
@@ -82,6 +92,17 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
             },
           },
         ],
+      },
+    });
+  };
+
+  public readonly overwriteSheetData: ISheetWriter['overwriteSheetData'] = async ({ range, rows, sheetName }) => {
+    await this.sheetsApi.spreadsheets.values.update({
+      spreadsheetId: this.spreadsheetId,
+      range: `${sheetName}!${range}`,
+      valueInputOption: 'RAW', // or 'USER_ENTERED'
+      requestBody: {
+        values: rows,
       },
     });
   };

@@ -4,6 +4,7 @@ export interface ISheetReader {
   listSheets: (params: {}) => Promise<{ sheets: Array<Sheet> }>;
 
   readSheetData: (params: {
-    sheetId: number;
-  }) => Promise<Array<Array<unknown>>>;
+    range: string;
+    sheetName: string;
+  }) => Promise<{ rows: Array<Array<unknown>> }>;
 }

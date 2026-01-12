@@ -5,6 +5,7 @@ import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager'
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
 import { SortUtils } from '../../core/sort/utils';
+import { CoreUtils } from '../../core/utils';
 import type { ITrackerSyncer } from '../interfaces/tracker-syncer';
 
 /*
@@ -54,6 +55,24 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
+  private readonly syncOwnedColumn = async ({ cardCount, sheetName }: { cardCount: number; sheetName: string}): Promise<void> => {
+    const { rows } = await this.sheetReader.readSheetData({ range: 'A:A', sheetName });
+
+    if (rows.length === 0) {
+      // empty column
+      await this.sheetWriter.overwriteSheetData({
+        range: 'A:A',
+        rows: [
+          ['isOwned'],
+          ...CoreUtils.range(cardCount).map(() => [false]),
+        ],
+        sheetName,
+      });
+    } else {
+      // TODO: ensure column is set correctly
+    }
+  };
+
   private readonly syncBoosterPackSet = async ({
     boosterPackSet,
     setIndex,
@@ -75,6 +94,8 @@ export class TrackerSyncer implements ITrackerSyncer {
         throw new Error('expected sheet indices to match');
       }
     }
+
+    await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetName });
   };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
