@@ -41,7 +41,10 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
       const { parsedBoosterPackSets } = this.boosterPackSetParser.parseBoosterPackSets({
         data: contents,
       });
-      const sortedBoosterPackSets = SortUtils.sortByString(parsedBoosterPackSets, ({ id }) => id).filter(({ id }) => !id.startsWith('P-'));
+      const sortedBoosterPackSets = SortUtils.sortByString(
+        parsedBoosterPackSets,
+        ({ id }) => id,
+      ).filter(({ id }) => !id.startsWith('P-'));
 
       const boosterPackSets: Array<BoosterPackSet> = [];
       for (const parsedBoosterPackSet of sortedBoosterPackSets) {

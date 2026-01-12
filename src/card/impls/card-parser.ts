@@ -37,7 +37,10 @@ export class CardParser implements ICardParser {
     } else if (rarityString.includes('☆')) {
       rarity = {
         count: rarityString.length,
-        symbol: canBeShiny && rarityString.length <= 2 ? CARD_RARITY_SYMBOLS.Shiny : CARD_RARITY_SYMBOLS.Star,
+        symbol:
+          canBeShiny && rarityString.length <= 2
+            ? CARD_RARITY_SYMBOLS.Shiny
+            : CARD_RARITY_SYMBOLS.Star,
       };
     } else if (rarityString.includes('Crown Rare')) {
       rarity = {

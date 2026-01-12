@@ -6,9 +6,7 @@ import { dirname } from 'path';
 import type { IFileReader } from '../interfaces/file-reader';
 
 export class FileManager implements IFileChecker, IFileReader, IFileWriter {
-  public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
-    path,
-  }) => {
+  public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({ path }) => {
     let fileExists: boolean;
     try {
       await access(path.toString());
@@ -20,17 +18,12 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
     return { fileExists };
   };
 
-  public readonly readFromFile: IFileReader['readFromFile'] = async ({
-    path,
-  }) => {
+  public readonly readFromFile: IFileReader['readFromFile'] = async ({ path }) => {
     const contents = await readFile(path.toString(), 'utf-8');
     return { contents };
   };
 
-  public readonly writeToFile: IFileWriter['writeToFile'] = async ({
-    contents,
-    path,
-  }) => {
+  public readonly writeToFile: IFileWriter['writeToFile'] = async ({ contents, path }) => {
     console.log(`Writing to ${path}...`);
     await mkdir(dirname(path.toString()), { recursive: true });
     await writeFile(path.toString(), contents);

@@ -1,8 +1,8 @@
-import { SpreadsheetManager } from "./impls/spreadsheet-manager";
+import { SpreadsheetManager } from './impls/spreadsheet-manager';
 
 async function main() {
   const manager = SpreadsheetManager.create({
-    spreadsheetId: "1vZGdDiu5JCOpTXwgs-dBzNH51svwcnRkrzpuEqvJlJI",
+    spreadsheetId: '1vZGdDiu5JCOpTXwgs-dBzNH51svwcnRkrzpuEqvJlJI',
   });
 
   // await sheetsApi.spreadsheets.values.append({
@@ -17,7 +17,7 @@ async function main() {
   //   },
   // });
 
-  const {sheets } = await manager.listSheets({});
+  const { sheets } = await manager.listSheets({});
   console.log(sheets);
 }
 

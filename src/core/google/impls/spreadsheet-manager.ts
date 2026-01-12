@@ -1,9 +1,9 @@
-import { CoreConstants } from "../../constants";
-import { Path } from "../../path/types";
-import type { ISheetReader } from "../interfaces/sheet-reader";
-import { google, sheets_v4 } from "googleapis";
-import { SortUtils } from "../../sort/utils";
-import type { Sheet } from "../types";
+import { CoreConstants } from '../../constants';
+import { Path } from '../../path/types';
+import type { ISheetReader } from '../interfaces/sheet-reader';
+import { google, sheets_v4 } from 'googleapis';
+import { SortUtils } from '../../sort/utils';
+import type { Sheet } from '../types';
 
 export class SpreadsheetManager implements ISheetReader {
   private readonly sheetsApi: sheets_v4.Sheets;
@@ -14,13 +14,17 @@ export class SpreadsheetManager implements ISheetReader {
     this.spreadsheetId = params.spreadsheetId;
   }
 
-  public static readonly create = ({spreadsheetId}: {spreadsheetId: string}): SpreadsheetManager => {
+  public static readonly create = ({
+    spreadsheetId,
+  }: {
+    spreadsheetId: string;
+  }): SpreadsheetManager => {
     const auth = new google.auth.GoogleAuth({
       keyFile: Path.create(`${CoreConstants.CREDENTIALS_PATH}/service-account.json`).toString(),
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
     const sheetsApi: sheets_v4.Sheets = google.sheets({
-      version: "v4",
+      version: 'v4',
       auth,
     });
 
@@ -35,11 +39,13 @@ export class SpreadsheetManager implements ISheetReader {
 
     const sheets = SortUtils.sortByNumber(
       result.data.sheets!.map((o) => o.properties!),
-      (o) => o.index!
-    ).map((o): Sheet => ({
-      id: o.sheetId!,
-      name: o.title!,
-    }));
+      (o) => o.index!,
+    ).map(
+      (o): Sheet => ({
+        id: o.sheetId!,
+        name: o.title!,
+      }),
+    );
 
     return { sheets };
   };
