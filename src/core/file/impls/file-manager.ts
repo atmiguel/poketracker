@@ -8,7 +8,7 @@ import type { IFileReader } from '../interfaces/file-reader';
 export class FileManager implements IFileChecker, IFileReader, IFileWriter {
   public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
     path,
-  }): Promise<{ fileExists: boolean }> => {
+  }) => {
     let fileExists: boolean;
     try {
       await access(path.toString());
@@ -22,7 +22,7 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
 
   public readonly readFromFile: IFileReader['readFromFile'] = async ({
     path,
-  }): Promise<{ contents: string }> => {
+  }) => {
     const contents = await readFile(path.toString(), 'utf-8');
     return { contents };
   };
@@ -30,7 +30,7 @@ export class FileManager implements IFileChecker, IFileReader, IFileWriter {
   public readonly writeToFile: IFileWriter['writeToFile'] = async ({
     contents,
     path,
-  }): Promise<void> => {
+  }) => {
     console.log(`Writing to ${path}...`);
     await mkdir(dirname(path.toString()), { recursive: true });
     await writeFile(path.toString(), contents);

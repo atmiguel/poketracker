@@ -5,6 +5,7 @@
     "format:check": "prettier --check ./src",
     "format": "prettier --write ./src",
     "main": "tsx ./src/scripts/main.ts",
+    "temp": "tsx ./src/core/google/temp.ts",
     "type:check": "tsc --noEmit"
   },
   "type": "module",
