@@ -3,8 +3,6 @@ import { HtmlElement } from '../../core/html/types';
 import type { IBoosterPackParser } from '../interfaces/booster-pack-parser';
 
 export class BoosterPackParser implements IBoosterPackParser {
-  public constructor() {}
-
   public readonly parseBoosterPacks: IBoosterPackParser['parseBoosterPacks'] = ({ data }) => {
     const rootElement = HtmlElement.create({ data });
     const packsList = rootElement.findNullableOne('.pack-selection');

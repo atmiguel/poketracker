@@ -6,8 +6,6 @@ import { dirname } from 'path';
 import type { IFileReader } from '../interfaces/file-reader';
 
 export class FileManager implements IFileChecker, IFileReader, IFileWriter {
-  public constructor() {}
-
   public readonly checkFileExists: IFileChecker['checkFileExists'] = async ({
     path,
   }): Promise<{ fileExists: boolean }> => {

@@ -35,7 +35,9 @@ export const Card = z.strictObject({
 });
 export type Card = z.infer<typeof Card>;
 
-export const ParsedCard = Card.safeExtend({
+export const ParsedCard = Card.omit({
+  number: true,
+}).safeExtend({
   packName: z.nullable(NonEmptyString),
 });
 export type ParsedCard = z.infer<typeof ParsedCard>;

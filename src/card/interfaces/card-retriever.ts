@@ -3,6 +3,7 @@ import type { Card, ParsedCard } from '../types';
 
 export interface ICardRetriever {
   retrieveCard: (params: {
+    canBeShiny: boolean;
     cardNumber: number;
     packSetId: string;
   }) => Promise<{ parsedCard: ParsedCard }>;

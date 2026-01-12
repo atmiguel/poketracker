@@ -7,8 +7,6 @@ import { parse, isValid } from 'date-fns';
 import { HtmlElement } from '../../core/html/types';
 
 export class BoosterPackSetParser implements IBoosterPackSetParser {
-  public constructor() {}
-
   private static readonly parseSeriesRow = ({ row }: { row: HtmlElement }): { series: string } => {
     const cells = row.getChildren();
     assert(cells.length === 1);

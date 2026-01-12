@@ -1,7 +1,7 @@
 import type { ParsedCard } from '../types';
 
 export interface ICardParser {
-  parseCard: (params: { data: string }) => {
+  parseCard: (params: { canBeShiny: boolean; data: string }) => {
     parsedCard: ParsedCard;
   };
 }
