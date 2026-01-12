@@ -4,7 +4,7 @@ const main = async (): Promise<void> => {
   const { boosterPackSets } = await CardInstances.boosterPackSetRetriever.retrieveBoosterPackSets(
     {},
   );
-  console.log(boosterPackSets);
+  console.log(JSON.stringify(boosterPackSets, null, 2));
 };
 
 main().catch((err) => {
