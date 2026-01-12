@@ -4,8 +4,9 @@ import type { ISheetReader } from '../interfaces/sheet-reader';
 import { google, sheets_v4 } from 'googleapis';
 import { SortUtils } from '../../sort/utils';
 import type { Sheet } from '../types';
+import type { ISheetWriter } from '../interfaces/sheet-writer';
 
-export class SpreadsheetManager implements ISheetReader {
+export class SpreadsheetManager implements ISheetReader, ISheetWriter {
   private readonly sheetsApi: sheets_v4.Sheets;
   private readonly spreadsheetId: string;
 
@@ -48,5 +49,40 @@ export class SpreadsheetManager implements ISheetReader {
     );
 
     return { sheets };
+  };
+
+  public readonly addSheet: ISheetWriter['addSheet'] = async ({ name }) => {
+    await this.sheetsApi.spreadsheets.batchUpdate({
+      spreadsheetId: this.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            addSheet: {
+              properties: {
+                title: name,
+              },
+            },
+          },
+        ],
+      },
+    });
+  };
+
+  public readonly insertSheet: ISheetWriter['insertSheet'] = async ({ index, name }) => {
+    await this.sheetsApi.spreadsheets.batchUpdate({
+      spreadsheetId: this.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            addSheet: {
+              properties: {
+                title: name,
+                index,
+              },
+            },
+          },
+        ],
+      },
+    });
   };
 }

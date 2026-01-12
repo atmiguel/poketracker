@@ -17,6 +17,7 @@ async function main() {
   //   },
   // });
 
+  // await manager.addSheet({ name: 'sure' });
   const { sheets } = await manager.listSheets({});
   console.log(sheets);
 }
