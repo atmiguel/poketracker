@@ -1,10 +1,9 @@
-import { CardInstances } from '../card/instances';
+import { TrackerConstants } from '../tracker/constants';
+import { TrackerSyncer } from '../tracker/impls/tracker-syncer';
 
 const main = async (): Promise<void> => {
-  const { boosterPackSets } = await CardInstances.boosterPackSetRetriever.retrieveBoosterPackSets(
-    {},
-  );
-  console.log(JSON.stringify(boosterPackSets, null, 2));
+  const trackerSyncer = TrackerSyncer.create({ spreadsheetId: TrackerConstants.ADRIAN_SPREADSHEET_ID });
+  await trackerSyncer.syncTracker({});
 };
 
 main().catch((err) => {
