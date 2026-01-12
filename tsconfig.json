@@ -38,6 +38,7 @@
     "noUncheckedSideEffectImports": true,
     "skipLibCheck": true,
 
+    "target": "ES2020",
 	},
 }
 

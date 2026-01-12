@@ -1,5 +1,6 @@
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
+import type { BoosterPackSet } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
@@ -43,7 +44,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     this.sheetWriter = params.sheetWriter;
   }
 
-  public static readonly create = ({spreadsheetId}: {spreadsheetId: string}): TrackerSyncer => {
+  public static readonly create = ({ spreadsheetId }: { spreadsheetId: string }): TrackerSyncer => {
     const spreadsheetManager = SpreadsheetManager.create({ spreadsheetId });
 
     return new TrackerSyncer({
@@ -53,13 +54,36 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
+  private readonly syncBoosterPackSet = async ({
+    boosterPackSet,
+    setIndex,
+  }: {
+    boosterPackSet: BoosterPackSet;
+    setIndex: number;
+  }): Promise<void> => {
+    const { sheets } = await this.sheetReader.listSheets({});
+
+    const sheetName = `${boosterPackSet.id}: ${boosterPackSet.name}`;
+    const sheetIndex = sheets.map((o) => o.name).indexOf(sheetName);
+
+    if (sheetIndex < 0) {
+      // sheet missing
+      console.log(`Creating sheet ${sheetName}...`);
+      await this.sheetWriter.insertSheet({ index: setIndex, name: sheetName });
+    } else {
+      if (sheetIndex !== setIndex) {
+        throw new Error('expected sheet indices to match');
+      }
+    }
+  };
+
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
     const { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
     const sortedBoosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
-    // const { sheets } = await this.sheetReader.listSheets({});
 
-    for (const boosterPackSet of sortedBoosterPackSets) {
-      console.log(boosterPackSet.id);
+    for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
+      console.log(`Syncing set ${boosterPackSet.id}...`);
+      await this.syncBoosterPackSet({ boosterPackSet, setIndex });
     }
   };
 }

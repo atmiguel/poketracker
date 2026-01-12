@@ -2,7 +2,9 @@ import { TrackerConstants } from '../tracker/constants';
 import { TrackerSyncer } from '../tracker/impls/tracker-syncer';
 
 const main = async (): Promise<void> => {
-  const trackerSyncer = TrackerSyncer.create({ spreadsheetId: TrackerConstants.ADRIAN_SPREADSHEET_ID });
+  const trackerSyncer = TrackerSyncer.create({
+    spreadsheetId: TrackerConstants.ADRIAN_SPREADSHEET_ID,
+  });
   await trackerSyncer.syncTracker({});
 };
 
