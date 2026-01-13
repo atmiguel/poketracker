@@ -5,12 +5,16 @@ import { google, sheets_v4 } from 'googleapis';
 import { SortUtils } from '../../sort/utils';
 import type { Sheet } from '../types';
 import type { ISheetWriter } from '../interfaces/sheet-writer';
+import PQueue from 'p-queue';
+
 
 export class SpreadsheetManager implements ISheetReader, ISheetWriter {
+  private readonly queue: PQueue;
   private readonly sheetsApi: sheets_v4.Sheets;
   private readonly spreadsheetId: string;
 
-  private constructor(params: { sheetsApi: sheets_v4.Sheets; spreadsheetId: string }) {
+  private constructor(params: { queue: PQueue; sheetsApi: sheets_v4.Sheets; spreadsheetId: string }) {
+    this.queue = params.queue;
     this.sheetsApi = params.sheetsApi;
     this.spreadsheetId = params.spreadsheetId;
   }
@@ -29,14 +33,25 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
       auth,
     });
 
+    const queue = new PQueue({
+      concurrency: 1,
+      interval: 60 * 1000, // 1 minute
+      intervalCap: 50,
+    });
+
     return new SpreadsheetManager({
+      queue,
       sheetsApi,
       spreadsheetId,
     });
   };
 
+  private readonly limited = <T>(fn: () => Promise<T>) => {
+    return this.queue.add(fn);
+  }
+
   public readonly listSheets: ISheetReader['listSheets'] = async ({}) => {
-    const result = await this.sheetsApi.spreadsheets.get({ spreadsheetId: this.spreadsheetId });
+    const result = await this.limited(() => this.sheetsApi.spreadsheets.get({ spreadsheetId: this.spreadsheetId }));
 
     const sheets = SortUtils.sortByNumber(
       result.data.sheets!.map((o) => o.properties!),
@@ -52,17 +67,17 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
   };
 
   public readonly readSheetData: ISheetReader['readSheetData'] = async ({ range, sheetName }) => {
-    const response = await this.sheetsApi.spreadsheets.values.get({
+    const response = await this.limited(() => this.sheetsApi.spreadsheets.values.get({
       spreadsheetId: this.spreadsheetId,
       range: `${sheetName}!${range}`,
-    });
+    }));
 
     const rows = response.data.values ?? [];
     return { rows };
   };
 
   public readonly insertSheet: ISheetWriter['insertSheet'] = async ({ index, name }) => {
-    const response = await this.sheetsApi.spreadsheets.batchUpdate({
+    const response = await this.limited(() => this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
       requestBody: {
         requests: [
@@ -76,7 +91,7 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
           },
         ],
       },
-    });
+    }));
 
     const sheetId = response.data.replies![0]?.addSheet?.properties?.sheetId!;
     return { sheetId };
@@ -87,18 +102,18 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     rows,
     sheetName,
   }) => {
-    await this.sheetsApi.spreadsheets.values.update({
+    await this.limited(() => this.sheetsApi.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: `${sheetName}!${range}`,
       valueInputOption: 'USER_ENTERED', // or 'RAW'
       requestBody: {
         values: rows,
       },
-    });
+    }));
   };
 
   public readonly setCellsToCheckboxes: ISheetWriter['setCellsToCheckboxes'] = async ({ columnIndex, count, sheetId, startRowIndex }) => {
-    await this.sheetsApi.spreadsheets.batchUpdate({
+    await this.limited(() => this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
       requestBody: {
         requests: [
@@ -122,14 +137,14 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
           },
         ],
       },
-    });
+    }));
   }
 
   public readonly freezeRows: ISheetWriter['freezeRows'] = async({
     count,
     sheetId,
   }) => {
-    await this.sheetsApi.spreadsheets.batchUpdate({
+    await this.limited(() => this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
       requestBody: {
         requests: [
@@ -146,6 +161,6 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
           },
         ],
       },
-    });
+    }));
   }
 }
