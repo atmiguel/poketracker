@@ -55,17 +55,20 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
-  private readonly syncOwnedColumn = async ({ cardCount, sheetName }: { cardCount: number; sheetName: string}): Promise<void> => {
+  private readonly syncOwnedColumn = async ({
+    cardCount,
+    sheetName,
+  }: {
+    cardCount: number;
+    sheetName: string;
+  }): Promise<void> => {
     const { rows } = await this.sheetReader.readSheetData({ range: 'A:A', sheetName });
 
     if (rows.length === 0) {
       // empty column
       await this.sheetWriter.overwriteSheetData({
         range: 'A:A',
-        rows: [
-          ['isOwned'],
-          ...CoreUtils.range(cardCount).map(() => [false]),
-        ],
+        rows: [['isOwned'], ...CoreUtils.range(cardCount).map(() => [false])],
         sheetName,
       });
     } else {

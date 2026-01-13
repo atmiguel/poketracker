@@ -96,7 +96,11 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     });
   };
 
-  public readonly overwriteSheetData: ISheetWriter['overwriteSheetData'] = async ({ range, rows, sheetName }) => {
+  public readonly overwriteSheetData: ISheetWriter['overwriteSheetData'] = async ({
+    range,
+    rows,
+    sheetName,
+  }) => {
     await this.sheetsApi.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: `${sheetName}!${range}`,
