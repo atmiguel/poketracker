@@ -4,32 +4,13 @@ import { BoosterPackSet, type Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
+import type { Sheet } from '../../core/google/types';
 import { SortUtils } from '../../core/sort/utils';
 import { CoreUtils } from '../../core/utils';
 import type { ITrackerSyncer } from '../interfaces/tracker-syncer';
 
-/*
+type SheetMetadata = { id: number; index: number };
 
-pseudo-code:
-
-- for each set:
-  - check if sheet exists
-    - if not, create sheet
-  - if so, ensure sheet in correct spot
-  - ensure sheet has correct data
-    - check header (owned, number, name)
-    - check column values
-      - owned should be booleans
-      - numbers and names should be all present
-
-Notes:
-- optionally error if additional sheets exist?
-- ensure sheets are set up correctly in reverse order
-  - B1: blah, A4a: blah, A4: sure, etc.
-  - error if any sheets have unexpected name
-  - add missing sheet to front if needed
-
-*/
 export class TrackerSyncer implements ITrackerSyncer {
   private readonly boosterPackSetRetriever: IBoosterPackSetRetriever;
   private readonly sheetReader: ISheetReader;
@@ -136,6 +117,13 @@ export class TrackerSyncer implements ITrackerSyncer {
     }
   };
 
+  private static readonly constructSheetMetadataByName = ({ sheets }: { sheets: Array<Sheet> }): Map<string, SheetMetadata> => {
+    return sheets.reduce((accumulator, sheet, index) => {
+      accumulator.set(sheet.name, { id: sheet.id, index });
+      return accumulator;
+    }, new Map<string, SheetMetadata>());
+  };
+
   private readonly syncBoosterPackSet = async ({
     boosterPackSet,
     setId,
@@ -146,10 +134,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     setIndex: number;
   }): Promise<void> => {
     const { sheets } = await this.sheetReader.listSheets({});
-    const sheetMetadataByName = sheets.reduce((accumulator, sheet, index) => {
-      accumulator.set(sheet.name, { id: sheet.id, index });
-      return accumulator;
-    }, new Map<string, { id: number; index: number }>());
+    const sheetMetadataByName = TrackerSyncer.constructSheetMetadataByName({ sheets });
 
     const sheetName = boosterPackSet.id;
     let sheetMetadata = sheetMetadataByName.get(sheetName) ?? null;
@@ -191,7 +176,41 @@ export class TrackerSyncer implements ITrackerSyncer {
     boosterPackSets,
   }: {
     boosterPackSets: Array<BoosterPackSet>;
-  }) => {};
+  }) => {
+    const sheetName = 'Stats';
+
+    const { sheets } = await this.sheetReader.listSheets({});
+    const sheetMetadataByName = TrackerSyncer.constructSheetMetadataByName({ sheets });
+
+    let sheetId = sheetMetadataByName.get(sheetName)?.id ?? null;
+    if (sheetId === null) {
+      // sheet missing
+      console.log(`Creating sheet ${sheetName}...`);
+      const result = await this.sheetWriter.appendSheet({ name: sheetName });
+      sheetId = result.sheetId;
+    } else {
+      // TODO: ensure Stats are set correctly
+    }
+
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [
+        ['setId', 'setName', 'ownedCount', 'totalCount', 'ownedPercent'],
+        ...boosterPackSets.map((boosterPackSet, index) => {
+          const rowNumber = index + 2;
+
+          return [
+            boosterPackSet.id,
+            boosterPackSet.name,
+            `=COUNTIF('${boosterPackSet.id}'!A3:A, TRUE)`,
+            boosterPackSet.cardCount,
+            `=C${rowNumber}/D${rowNumber}`,
+          ];
+        }),
+      ],
+      sheetName,
+    });
+  };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
     const { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});

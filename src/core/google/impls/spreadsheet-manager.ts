@@ -83,7 +83,7 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     return { rows };
   };
 
-  public readonly append: ISheetWriter['appendSheet'] = async ({ name }) => {
+  public readonly appendSheet: ISheetWriter['appendSheet'] = async ({ name }) => {
     const response = await this.limited(() =>
       this.sheetsApi.spreadsheets.batchUpdate({
         spreadsheetId: this.spreadsheetId,
