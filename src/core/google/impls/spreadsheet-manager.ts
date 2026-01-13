@@ -104,10 +104,42 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     await this.sheetsApi.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: `${sheetName}!${range}`,
-      valueInputOption: 'RAW', // or 'USER_ENTERED'
+      // valueInputOption: 'RAW', // or 'USER_ENTERED'
       requestBody: {
         values: rows,
       },
     });
   };
+
+  public readonly setColumnAsCheckboxes = async ({ columnIndex, sheetId, startRowIndex }: {
+    columnIndex: number;
+    sheetId: number;
+    startRowIndex: number;
+  }) => {
+    await this.sheetsApi.spreadsheets.batchUpdate({
+      spreadsheetId: this.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            setDataValidation: {
+              range: {
+                sheetId,
+                startRowIndex,
+                endRowIndex: null,
+                startColumnIndex: columnIndex,
+                endColumnIndex: columnIndex + 1,
+              },
+              rule: {
+                condition: {
+                  type: 'BOOLEAN',
+                },
+                strict: true,
+                showCustomUi: true,
+              },
+            },
+          },
+        ],
+      },
+    });
+  }
 }

@@ -8,4 +8,10 @@ export interface ISheetWriter {
     rows: Array<Array<unknown>>;
     sheetName: string;
   }) => Promise<void>;
+
+  setColumnAsCheckboxes: (params: {
+    columnIndex: number;
+    sheetId: number;
+    startRowIndex: number;
+  }) => Promise<void>;
 }

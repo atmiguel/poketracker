@@ -1,9 +1,10 @@
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
-import type { BoosterPackSet } from '../../card/types';
+import type { BoosterPackSet, Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
+import { ObjectUtils } from '../../core/object/utils';
 import { SortUtils } from '../../core/sort/utils';
 import { CoreUtils } from '../../core/utils';
 import type { ITrackerSyncer } from '../interfaces/tracker-syncer';
@@ -55,6 +56,20 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
+  private static readonly extractCards = ({ boosterPackSet }: { boosterPackSet: BoosterPackSet }): { cards: Array<Card> } => {
+    const cardsByNumber: Map<number, Card> = new Map();
+    for (const pack of boosterPackSet.packs) {
+      for (const card of pack.cards) {
+        if (!cardsByNumber.has(card.number)) {
+          cardsByNumber.set(card.number, card);
+        }
+      }
+    }
+
+    const cards: Array<Card> = CoreUtils.range(boosterPackSet.cardCount).map((i) => cardsByNumber.get(i + 1)!);
+    return { cards };
+  };
+
   private readonly syncOwnedColumn = async ({
     cardCount,
     sheetName,
@@ -62,25 +77,54 @@ export class TrackerSyncer implements ITrackerSyncer {
     cardCount: number;
     sheetName: string;
   }): Promise<void> => {
-    const { rows } = await this.sheetReader.readSheetData({ range: 'A:A', sheetName });
+    const range = 'A:A';
+    const { rows } = await this.sheetReader.readSheetData({ range, sheetName });
 
     if (rows.length === 0) {
       // empty column
       await this.sheetWriter.overwriteSheetData({
-        range: 'A:A',
+        range,
         rows: [['isOwned'], ...CoreUtils.range(cardCount).map(() => [false])],
         sheetName,
       });
+
+      await this.sheetWriter.setColumnAsCheckboxes({ columnIndex: 0, sheetId, startRowIndex: 1 });
     } else {
       // TODO: ensure column is set correctly
     }
   };
 
+  private readonly syncNonOwnedColumns = async ({
+    cards,
+    setId,
+    sheetName,
+  }: {
+    cards: Array<Card>;
+    setId: string;
+    sheetName: string;
+  }): Promise<void> => {
+    const range = 'B:C';
+    const { rows } = await this.sheetReader.readSheetData({ range, sheetName });
+
+    if (rows.length === 0) {
+      // empty columns
+      await this.sheetWriter.overwriteSheetData({
+        range,
+        rows: [['id', 'name'], ...cards.map((card) => [`${setId} ${card.number.toString().padStart(3, '0')}`, card.name])],
+        sheetName,
+      });
+    } else {
+      // TODO: ensure columns are set correctly
+    }
+  };
+
   private readonly syncBoosterPackSet = async ({
     boosterPackSet,
+    setId,
     setIndex,
   }: {
     boosterPackSet: BoosterPackSet;
+    setId: string;
     setIndex: number;
   }): Promise<void> => {
     const { sheets } = await this.sheetReader.listSheets({});
@@ -92,6 +136,7 @@ export class TrackerSyncer implements ITrackerSyncer {
       // sheet missing
       console.log(`Creating sheet ${sheetName}...`);
       await this.sheetWriter.insertSheet({ index: setIndex, name: sheetName });
+      // TODO: need to retrieve sheet Id
     } else {
       if (sheetIndex !== setIndex) {
         throw new Error('expected sheet indices to match');
@@ -99,6 +144,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     }
 
     await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetName });
+    await this.syncNonOwnedColumns({ cards: TrackerSyncer.extractCards({ boosterPackSet }).cards, setId, sheetName });
   };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
@@ -107,7 +153,8 @@ export class TrackerSyncer implements ITrackerSyncer {
 
     for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
       console.log(`Syncing set ${boosterPackSet.id}...`);
-      await this.syncBoosterPackSet({ boosterPackSet, setIndex });
+      await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
+      break;
     }
   };
 }
