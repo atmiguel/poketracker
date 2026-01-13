@@ -124,4 +124,28 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
       },
     });
   }
+
+  public readonly freezeRows: ISheetWriter['freezeRows'] = async({
+    count,
+    sheetId,
+  }) => {
+    await this.sheetsApi.spreadsheets.batchUpdate({
+      spreadsheetId: this.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            updateSheetProperties: {
+              properties: {
+                sheetId,
+                gridProperties: {
+                  frozenRowCount: count,
+                },
+              },
+              fields: 'gridProperties.frozenRowCount',
+            },
+          },
+        ],
+      },
+    });
+  }
 }

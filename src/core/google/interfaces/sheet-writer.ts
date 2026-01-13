@@ -13,4 +13,9 @@ export interface ISheetWriter {
     sheetId: number;
     startRowIndex: number;
   }) => Promise<void>;
+
+  freezeRows: (params: {
+    count: number;
+    sheetId: number;
+  }) => Promise<void>;
 }

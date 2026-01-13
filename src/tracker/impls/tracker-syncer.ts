@@ -78,7 +78,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     sheetId: number;
     sheetName: string;
   }): Promise<void> => {
-    const range = 'A:A';
+    const range = 'A2:A';
     const { rows } = await this.sheetReader.readSheetData({ range, sheetName });
 
     if (rows.length === 0) {
@@ -89,7 +89,7 @@ export class TrackerSyncer implements ITrackerSyncer {
         sheetName,
       });
 
-      await this.sheetWriter.setCellsToCheckboxes({ columnIndex: 0, count: cardCount, sheetId, startRowIndex: 1 });
+      await this.sheetWriter.setCellsToCheckboxes({ columnIndex: 0, count: cardCount, sheetId, startRowIndex: 2 });
     } else {
       // TODO: ensure column is set correctly
     }
@@ -104,7 +104,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     setId: string;
     sheetName: string;
   }): Promise<void> => {
-    const range = 'B:C';
+    const range = 'B2:C';
     const { rows } = await this.sheetReader.readSheetData({ range, sheetName });
 
     if (rows.length === 0) {
@@ -134,7 +134,7 @@ export class TrackerSyncer implements ITrackerSyncer {
       return accumulator;
     }, new Map<string, { id: number; index: number }>());
 
-    const sheetName = `${boosterPackSet.id}: ${boosterPackSet.name}`;
+    const sheetName = boosterPackSet.id;
     let sheetMetadata = sheetMetadataByName.get(sheetName) ?? null;
 
     if (sheetMetadata === null) {
@@ -145,12 +145,19 @@ export class TrackerSyncer implements ITrackerSyncer {
         id: result.sheetId,
         index: setIndex,
       };
+
+      await this.sheetWriter.freezeRows({ count: 2, sheetId: result.sheetId });
     } else {
       if (sheetMetadata.index !== setIndex) {
         throw new Error('expected sheet indices to match');
       }
     }
 
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [[boosterPackSet.name]],
+      sheetName,
+    });
     await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetId: sheetMetadata.id, sheetName });
     await this.syncNonOwnedColumns({ cards: TrackerSyncer.extractCards({ boosterPackSet }).cards, setId, sheetName });
   };
