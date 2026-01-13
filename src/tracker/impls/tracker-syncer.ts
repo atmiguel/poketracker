@@ -4,7 +4,6 @@ import type { BoosterPackSet, Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
-import { ObjectUtils } from '../../core/object/utils';
 import { SortUtils } from '../../core/sort/utils';
 import { CoreUtils } from '../../core/utils';
 import type { ITrackerSyncer } from '../interfaces/tracker-syncer';
@@ -72,9 +71,11 @@ export class TrackerSyncer implements ITrackerSyncer {
 
   private readonly syncOwnedColumn = async ({
     cardCount,
+    sheetId,
     sheetName,
   }: {
     cardCount: number;
+    sheetId: number;
     sheetName: string;
   }): Promise<void> => {
     const range = 'A:A';
@@ -88,7 +89,7 @@ export class TrackerSyncer implements ITrackerSyncer {
         sheetName,
       });
 
-      await this.sheetWriter.setColumnAsCheckboxes({ columnIndex: 0, sheetId, startRowIndex: 1 });
+      await this.sheetWriter.setCellsToCheckboxes({ columnIndex: 0, count: cardCount, sheetId, startRowIndex: 1 });
     } else {
       // TODO: ensure column is set correctly
     }
@@ -128,22 +129,29 @@ export class TrackerSyncer implements ITrackerSyncer {
     setIndex: number;
   }): Promise<void> => {
     const { sheets } = await this.sheetReader.listSheets({});
+    const sheetMetadataByName = sheets.reduce((accumulator, sheet, index) => {
+      accumulator.set(sheet.name, { id: sheet.id, index });
+      return accumulator;
+    }, new Map<string, { id: number; index: number }>());
 
     const sheetName = `${boosterPackSet.id}: ${boosterPackSet.name}`;
-    const sheetIndex = sheets.map((o) => o.name).indexOf(sheetName);
+    let sheetMetadata = sheetMetadataByName.get(sheetName) ?? null;
 
-    if (sheetIndex < 0) {
+    if (sheetMetadata === null) {
       // sheet missing
       console.log(`Creating sheet ${sheetName}...`);
-      await this.sheetWriter.insertSheet({ index: setIndex, name: sheetName });
-      // TODO: need to retrieve sheet Id
+      const result = await this.sheetWriter.insertSheet({ index: setIndex, name: sheetName });
+      sheetMetadata = {
+        id: result.sheetId,
+        index: setIndex,
+      };
     } else {
-      if (sheetIndex !== setIndex) {
+      if (sheetMetadata.index !== setIndex) {
         throw new Error('expected sheet indices to match');
       }
     }
 
-    await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetName });
+    await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetId: sheetMetadata.id, sheetName });
     await this.syncNonOwnedColumns({ cards: TrackerSyncer.extractCards({ boosterPackSet }).cards, setId, sheetName });
   };
 
@@ -154,7 +162,6 @@ export class TrackerSyncer implements ITrackerSyncer {
     for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
       console.log(`Syncing set ${boosterPackSet.id}...`);
       await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
-      break;
     }
   };
 }

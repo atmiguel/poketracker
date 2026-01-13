@@ -1,7 +1,5 @@
 export interface ISheetWriter {
-  addSheet: (params: { name: string }) => Promise<void>;
-
-  insertSheet: (params: { index: number; name: string }) => Promise<void>;
+  insertSheet: (params: { index: number; name: string }) => Promise<{ sheetId: number }>;
 
   overwriteSheetData: (params: {
     range: string;
@@ -9,8 +7,9 @@ export interface ISheetWriter {
     sheetName: string;
   }) => Promise<void>;
 
-  setColumnAsCheckboxes: (params: {
+  setCellsToCheckboxes: (params: {
     columnIndex: number;
+    count: number;
     sheetId: number;
     startRowIndex: number;
   }) => Promise<void>;

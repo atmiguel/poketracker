@@ -61,25 +61,8 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     return { rows };
   };
 
-  public readonly addSheet: ISheetWriter['addSheet'] = async ({ name }) => {
-    await this.sheetsApi.spreadsheets.batchUpdate({
-      spreadsheetId: this.spreadsheetId,
-      requestBody: {
-        requests: [
-          {
-            addSheet: {
-              properties: {
-                title: name,
-              },
-            },
-          },
-        ],
-      },
-    });
-  };
-
   public readonly insertSheet: ISheetWriter['insertSheet'] = async ({ index, name }) => {
-    await this.sheetsApi.spreadsheets.batchUpdate({
+    const response = await this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
       requestBody: {
         requests: [
@@ -94,6 +77,9 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
         ],
       },
     });
+
+    const sheetId = response.data.replies![0]?.addSheet?.properties?.sheetId!;
+    return { sheetId };
   };
 
   public readonly overwriteSheetData: ISheetWriter['overwriteSheetData'] = async ({
@@ -104,18 +90,14 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     await this.sheetsApi.spreadsheets.values.update({
       spreadsheetId: this.spreadsheetId,
       range: `${sheetName}!${range}`,
-      // valueInputOption: 'RAW', // or 'USER_ENTERED'
+      valueInputOption: 'USER_ENTERED', // or 'RAW'
       requestBody: {
         values: rows,
       },
     });
   };
 
-  public readonly setColumnAsCheckboxes = async ({ columnIndex, sheetId, startRowIndex }: {
-    columnIndex: number;
-    sheetId: number;
-    startRowIndex: number;
-  }) => {
+  public readonly setCellsToCheckboxes: ISheetWriter['setCellsToCheckboxes'] = async ({ columnIndex, count, sheetId, startRowIndex }) => {
     await this.sheetsApi.spreadsheets.batchUpdate({
       spreadsheetId: this.spreadsheetId,
       requestBody: {
@@ -125,7 +107,7 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
               range: {
                 sheetId,
                 startRowIndex,
-                endRowIndex: null,
+                endRowIndex: startRowIndex + count,
                 startColumnIndex: columnIndex,
                 endColumnIndex: columnIndex + 1,
               },
