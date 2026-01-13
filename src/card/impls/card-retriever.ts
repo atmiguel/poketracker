@@ -63,7 +63,7 @@ export class CardRetriever implements ICardRetriever {
         seenThreeStars = true;
       }
 
-      if (parsedCard.packName === null || parsedCard.packName === packName) {
+      if (packName === null || parsedCard.packName === null || parsedCard.packName === packName) {
         const { name, rarity } = parsedCard;
 
         cards.push({
