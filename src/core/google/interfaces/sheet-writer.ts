@@ -1,4 +1,6 @@
 export interface ISheetWriter {
+  appendSheet: (params: { name: string }) => Promise<{ sheetId: number }>;
+
   insertSheet: (params: { index: number; name: string }) => Promise<{ sheetId: number }>;
 
   overwriteSheetData: (params: {
@@ -14,8 +16,5 @@ export interface ISheetWriter {
     startRowIndex: number;
   }) => Promise<void>;
 
-  freezeRows: (params: {
-    count: number;
-    sheetId: number;
-  }) => Promise<void>;
+  freezeRows: (params: { count: number; sheetId: number }) => Promise<void>;
 }

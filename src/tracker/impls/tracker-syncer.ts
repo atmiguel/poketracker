@@ -1,6 +1,6 @@
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
-import type { BoosterPackSet, Card } from '../../card/types';
+import { BoosterPackSet, type Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
@@ -55,7 +55,11 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
-  private static readonly extractCards = ({ boosterPackSet }: { boosterPackSet: BoosterPackSet }): { cards: Array<Card> } => {
+  private static readonly extractCards = ({
+    boosterPackSet,
+  }: {
+    boosterPackSet: BoosterPackSet;
+  }): { cards: Array<Card> } => {
     const cardsByNumber: Map<number, Card> = new Map();
     for (const pack of boosterPackSet.packs) {
       for (const card of pack.cards) {
@@ -65,7 +69,9 @@ export class TrackerSyncer implements ITrackerSyncer {
       }
     }
 
-    const cards: Array<Card> = CoreUtils.range(boosterPackSet.cardCount).map((i) => cardsByNumber.get(i + 1)!);
+    const cards: Array<Card> = CoreUtils.range(boosterPackSet.cardCount).map(
+      (i) => cardsByNumber.get(i + 1)!,
+    );
     return { cards };
   };
 
@@ -89,7 +95,12 @@ export class TrackerSyncer implements ITrackerSyncer {
         sheetName,
       });
 
-      await this.sheetWriter.setCellsToCheckboxes({ columnIndex: 0, count: cardCount, sheetId, startRowIndex: 2 });
+      await this.sheetWriter.setCellsToCheckboxes({
+        columnIndex: 0,
+        count: cardCount,
+        sheetId,
+        startRowIndex: 2,
+      });
     } else {
       // TODO: ensure column is set correctly
     }
@@ -111,7 +122,13 @@ export class TrackerSyncer implements ITrackerSyncer {
       // empty columns
       await this.sheetWriter.overwriteSheetData({
         range,
-        rows: [['id', 'name'], ...cards.map((card) => [`${setId} ${card.number.toString().padStart(3, '0')}`, card.name])],
+        rows: [
+          ['id', 'name'],
+          ...cards.map((card) => [
+            `${setId} ${card.number.toString().padStart(3, '0')}`,
+            card.name,
+          ]),
+        ],
         sheetName,
       });
     } else {
@@ -158,17 +175,33 @@ export class TrackerSyncer implements ITrackerSyncer {
       rows: [[boosterPackSet.name]],
       sheetName,
     });
-    await this.syncOwnedColumn({ cardCount: boosterPackSet.cardCount, sheetId: sheetMetadata.id, sheetName });
-    await this.syncNonOwnedColumns({ cards: TrackerSyncer.extractCards({ boosterPackSet }).cards, setId, sheetName });
+    await this.syncOwnedColumn({
+      cardCount: boosterPackSet.cardCount,
+      sheetId: sheetMetadata.id,
+      sheetName,
+    });
+    await this.syncNonOwnedColumns({
+      cards: TrackerSyncer.extractCards({ boosterPackSet }).cards,
+      setId,
+      sheetName,
+    });
   };
+
+  private readonly syncStatsSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {};
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
     const { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
     const sortedBoosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
 
-    for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
-      console.log(`Syncing set ${boosterPackSet.id}...`);
-      await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
-    }
+    // for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
+    //   console.log(`Syncing set ${boosterPackSet.id}...`);
+    //   await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
+    // }
+
+    await this.syncStatsSheet({ boosterPackSets: sortedBoosterPackSets });
   };
 }
