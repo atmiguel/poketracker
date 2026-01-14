@@ -244,15 +244,16 @@ export class TrackerSyncer implements ITrackerSyncer {
       range: 'A1',
       rows: [
         ['setId', 'setName', 'ownedCount', 'totalCount', 'ownedPercent'],
-        ...boosterPackSets.map((boosterPackSet, index) => {
-          const rowNumber = index + 2;
-
+        ...boosterPackSets.map((boosterPackSet) => {
           return [
             boosterPackSet.id,
             boosterPackSet.name,
             `=COUNTIF('${boosterPackSet.id}'!A3:A, TRUE)`,
             boosterPackSet.cardCount,
-            `=C${rowNumber}/D${rowNumber}`,
+            TrackerSyncer.getDivideFormula({
+              numeratorColumnId: 'C',
+              denominatorColumnId: 'D',
+            }),
           ];
         }),
       ],
@@ -265,8 +266,20 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
-  private static readonly getOwnedRarityFormula = ({ raritySymbol, setId }: { raritySymbol: CardRaritySymbol; setId: string }): string => {
-    return `=COUNTIFS('${setId}'!A3:A, TRUE, '${setId}'!E3:E, "${raritySymbol}")`;
+  private static readonly getCountIfOwnedParams = ({ setId }: { setId: string }): string => {
+    return `'${setId}'!A3:A, TRUE`;
+  };
+
+  private static readonly getCountIfRaritySymbolParams = ({ raritySymbol, setId }: { raritySymbol: CardRaritySymbol; setId: string }): string => {
+    return `'${setId}'!E3:E, "${raritySymbol}"`;
+  };
+
+  private static readonly getCountIfInPackParams = ({ packColumnId, setId }: { packColumnId: string; setId: string }): string => {
+    return `'${setId}'!${packColumnId}3:${packColumnId}, TRUE`;
+  };
+
+  private static readonly combineCountIfParams = (params: Array<string>): string => {
+    return `=COUNTIFS(${params.join(', ')})`;
   };
 
   private readonly syncSetRarityStatsSheet = async ({
@@ -283,17 +296,23 @@ export class TrackerSyncer implements ITrackerSyncer {
       range: 'A1',
       rows: [
         ['setId', 'setName', 'raritySymbol', 'ownedCount', 'totalCount', 'ownedPercent'],
-        ...boosterPackSets.flatMap((boosterPackSet, setIndex) => {
-          return CardRaritySymbol.options.map((raritySymbol, rarityIndex) => {
-            const rowNumber = (setIndex * CardRaritySymbol.options.length) + rarityIndex + 2;
-
+        ...boosterPackSets.flatMap((boosterPackSet) => {
+          return CardRaritySymbol.options.map((raritySymbol) => {
             return [
               boosterPackSet.id,
               boosterPackSet.name,
               raritySymbol,
-              TrackerSyncer.getOwnedRarityFormula({ raritySymbol, setId: boosterPackSet.id }),
-              `=COUNTIF('${boosterPackSet.id}'!E3:E, "${raritySymbol}")`,
-              `=IFERROR(D${rowNumber}/E${rowNumber}, 0)`,
+              TrackerSyncer.combineCountIfParams([
+                TrackerSyncer.getCountIfOwnedParams({ setId: boosterPackSet.id }),
+                TrackerSyncer.getCountIfRaritySymbolParams({ raritySymbol, setId: boosterPackSet.id }),
+              ]),
+              TrackerSyncer.combineCountIfParams([
+                TrackerSyncer.getCountIfRaritySymbolParams({ raritySymbol, setId: boosterPackSet.id }),
+              ]),
+              TrackerSyncer.getDivideFormula({
+                numeratorColumnId: 'D',
+                denominatorColumnId: 'E',
+              }),
             ];
           });
         }),
@@ -325,10 +344,15 @@ export class TrackerSyncer implements ITrackerSyncer {
           return [
             boosterPackSet.id,
             boosterPackSet.name,
-            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Diamond, setId: boosterPackSet.id }),
-            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Star, setId: boosterPackSet.id }),
-            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Shiny, setId: boosterPackSet.id }),
-            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Crown, setId: boosterPackSet.id }),
+            ...[
+              CARD_RARITY_SYMBOLS.Diamond,
+              CARD_RARITY_SYMBOLS.Star,
+              CARD_RARITY_SYMBOLS.Shiny,
+              CARD_RARITY_SYMBOLS.Crown,
+            ].map((raritySymbol) => TrackerSyncer.combineCountIfParams([
+              TrackerSyncer.getCountIfOwnedParams({ setId: boosterPackSet.id }),
+              TrackerSyncer.getCountIfRaritySymbolParams({ raritySymbol, setId: boosterPackSet.id }),
+            ])),
           ];
         }),
       ],
@@ -336,17 +360,120 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
-  public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
-    const { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
-    const sortedBoosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
+  private static readonly getDivideFormula = ({ numeratorColumnId, denominatorColumnId }: { numeratorColumnId: string; denominatorColumnId: string }): string => {
+    return `=IFERROR(INDEX(${numeratorColumnId}:${numeratorColumnId}, ROW())/INDEX(${denominatorColumnId}:${denominatorColumnId}, ROW()), 0)`;
+  };
 
-    for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
+  private readonly syncPackStatsSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {
+    const sheetName = 'PackStats';
+    const { sheetId } = await this.appendSheetIfMissing({ sheetName });
+
+    await this.sheetWriter.freezeRows({ count: 1, sheetId });
+
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [
+        ['setId', 'setName', 'packName', 'ownedCount', 'totalCount', 'ownedPercent'],
+        ...boosterPackSets.flatMap((boosterPackSet) => {
+          return boosterPackSet.packs.map((pack, packIndex) => {
+            const packColumnId = 'FGH'[packIndex]!;
+
+            return [
+              boosterPackSet.id,
+              boosterPackSet.name,
+              pack.name,
+              TrackerSyncer.combineCountIfParams([
+                TrackerSyncer.getCountIfOwnedParams({ setId: boosterPackSet.id }),
+                TrackerSyncer.getCountIfInPackParams({ packColumnId, setId: boosterPackSet.id }),
+              ]),
+              TrackerSyncer.combineCountIfParams([
+                TrackerSyncer.getCountIfInPackParams({ packColumnId, setId: boosterPackSet.id }),
+              ]),
+              TrackerSyncer.getDivideFormula({
+                numeratorColumnId: 'D',
+                denominatorColumnId: 'E',
+              }),
+            ];
+          });
+        }),
+      ],
+      sheetName,
+    });
+
+    await this.sheetWriter.formatColumnAsPercent({
+      columnIndex: 5,
+      sheetId,
+    });
+  };
+
+  private readonly syncPackRarityStatsSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {
+    const sheetName = 'PackRarityStats';
+    const { sheetId } = await this.appendSheetIfMissing({ sheetName });
+
+    await this.sheetWriter.freezeRows({ count: 1, sheetId });
+
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [
+        ['setId', 'setName', 'packName', 'raritySymbol', 'ownedCount', 'totalCount', 'ownedPercent'],
+        ...boosterPackSets.flatMap((boosterPackSet) => {
+          return boosterPackSet.packs.flatMap((pack, packIndex) => {
+            const packColumnId = 'FGH'[packIndex]!;
+
+            return CardRaritySymbol.options.map((raritySymbol) => {
+              return [
+                boosterPackSet.id,
+                boosterPackSet.name,
+                pack.name,
+                raritySymbol,
+                TrackerSyncer.combineCountIfParams([
+                  TrackerSyncer.getCountIfOwnedParams({ setId: boosterPackSet.id }),
+                  TrackerSyncer.getCountIfInPackParams({ packColumnId, setId: boosterPackSet.id }),
+                  TrackerSyncer.getCountIfRaritySymbolParams({ raritySymbol, setId: boosterPackSet.id }),
+                ]),
+                TrackerSyncer.combineCountIfParams([
+                  TrackerSyncer.getCountIfInPackParams({ packColumnId, setId: boosterPackSet.id }),
+                  TrackerSyncer.getCountIfRaritySymbolParams({ raritySymbol, setId: boosterPackSet.id }),
+                ]),
+                TrackerSyncer.getDivideFormula({
+                  numeratorColumnId: 'E',
+                  denominatorColumnId: 'F',
+                }),
+              ];
+            });
+          });
+        }),
+      ],
+      sheetName,
+    });
+
+    await this.sheetWriter.formatColumnAsPercent({
+      columnIndex: 6,
+      sheetId,
+    });
+  };
+
+  public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
+    let { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
+    boosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
+
+    for (const [setIndex, boosterPackSet] of boosterPackSets.entries()) {
       console.log(`Syncing set ${boosterPackSet.id}...`);
       await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
     }
 
-    await this.syncVerificationSheet({ boosterPackSets: sortedBoosterPackSets });
-    await this.syncSetStatsSheet({ boosterPackSets: sortedBoosterPackSets });
-    await this.syncSetRarityStatsSheet({ boosterPackSets: sortedBoosterPackSets });
+    await this.syncVerificationSheet({ boosterPackSets });
+    await this.syncSetStatsSheet({ boosterPackSets });
+    await this.syncSetRarityStatsSheet({ boosterPackSets });
+    await this.syncPackStatsSheet({ boosterPackSets });
+    await this.syncPackRarityStatsSheet({ boosterPackSets });
   };
 }

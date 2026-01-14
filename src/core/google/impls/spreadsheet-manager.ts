@@ -39,7 +39,7 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
     const queue = new PQueue({
       concurrency: 1,
       interval: 60 * 1000, // 1 minute
-      intervalCap: 50,
+      intervalCap: 60,
     });
 
     let isRateLimited = false;
