@@ -1,15 +1,17 @@
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
-import { BoosterPackSet, CARD_RARITY_SYMBOLS, CardRaritySymbol, type Card } from '../../card/types';
+import { BoosterPack, BoosterPackSet, CARD_RARITY_SYMBOLS, CardRaritySymbol, type Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
 import type { Sheet } from '../../core/google/types';
 import { SortUtils } from '../../core/sort/utils';
+import type { Nullable } from '../../core/types';
 import { CoreUtils } from '../../core/utils';
 import type { ITrackerSyncer } from '../interfaces/tracker-syncer';
 
 type SheetMetadata = { id: number; index: number };
+type CardWithMetadata = Card & { packNames: Array<Nullable<string>> };
 
 export class TrackerSyncer implements ITrackerSyncer {
   private readonly boosterPackSetRetriever: IBoosterPackSetRetriever;
@@ -37,20 +39,35 @@ export class TrackerSyncer implements ITrackerSyncer {
   };
 
   private static readonly extractCards = ({
-    boosterPackSet,
+    cardCount,
+    packs,
   }: {
-    boosterPackSet: BoosterPackSet;
-  }): { cards: Array<Card> } => {
-    const cardsByNumber: Map<number, Card> = new Map();
-    for (const pack of boosterPackSet.packs) {
+    cardCount: number;
+    packs: Array<BoosterPack>;
+  }): { cards: Array<CardWithMetadata> } => {
+    const cardsByNumber: Map<number, CardWithMetadata> = new Map();
+    for (const pack of packs) {
       for (const card of pack.cards) {
-        if (!cardsByNumber.has(card.number)) {
-          cardsByNumber.set(card.number, card);
+        const cardWithMetadata = cardsByNumber.get(card.number) ?? null;
+
+        if (cardWithMetadata === null) {
+          cardsByNumber.set(card.number, {
+            ...card,
+            packNames: [pack.name],
+          });
+        } else {
+          cardsByNumber.set(card.number, {
+            ...cardWithMetadata,
+            packNames: [
+              ...cardWithMetadata.packNames,
+              pack.name,
+            ],
+          });
         }
       }
     }
 
-    const cards: Array<Card> = CoreUtils.range(boosterPackSet.cardCount).map(
+    const cards: Array<CardWithMetadata> = CoreUtils.range(cardCount).map(
       (i) => cardsByNumber.get(i + 1)!,
     );
     return { cards };
@@ -77,9 +94,10 @@ export class TrackerSyncer implements ITrackerSyncer {
       });
 
       await this.sheetWriter.setCellsToCheckboxes({
-        columnIndex: 0,
-        count: cardCount,
+        columnCount: 1,
+        rowCount: cardCount,
         sheetId,
+        startColumnIndex: 0,
         startRowIndex: 2,
       });
     } else {
@@ -87,27 +105,56 @@ export class TrackerSyncer implements ITrackerSyncer {
     }
   };
 
+  private static readonly constructPackHeader = ({ packName } : { packName: Nullable<string> }): string => {
+    if (packName === null) {
+      return 'inPack';
+    }
+
+    return `in${packName.replace(' ', '').replace('-', '')}Pack`;
+  };
+
   private readonly syncNonOwnedColumns = async ({
-    cards,
+    cardCount,
+    packs,
     setId,
+    sheetId,
     sheetName,
   }: {
-    cards: Array<Card>;
+    cardCount: number;
+    packs: Array<BoosterPack>;
     setId: string;
+    sheetId: number;
     sheetName: string;
   }): Promise<void> => {
+    const { cards } = TrackerSyncer.extractCards({ cardCount, packs });
+
     await this.sheetWriter.overwriteSheetData({
-      range: 'B2:E',
+      range: 'B2',
       rows: [
-        ['id', 'name', 'rarityCount', 'raritySymbol'],
+        [
+          'id',
+          'name',
+          'rarityCount',
+          'raritySymbol',
+          ...packs.map((pack) => TrackerSyncer.constructPackHeader({ packName: pack.name })),
+        ],
         ...cards.map((card) => [
           `${setId} ${card.number.toString().padStart(3, '0')}`,
           card.name,
           card.rarity.count,
           card.rarity.symbol,
+          ...packs.map((pack) => card.packNames.includes(pack.name)),
         ]),
       ],
       sheetName,
+    });
+
+    await this.sheetWriter.setCellsToCheckboxes({
+      columnCount: packs.length,
+      rowCount: cardCount,
+      sheetId,
+      startColumnIndex: 5,
+      startRowIndex: 2,
     });
   };
 
@@ -160,8 +207,10 @@ export class TrackerSyncer implements ITrackerSyncer {
       sheetName,
     });
     await this.syncNonOwnedColumns({
-      cards: TrackerSyncer.extractCards({ boosterPackSet }).cards,
+      cardCount: boosterPackSet.cardCount,
+      packs: boosterPackSet.packs,
       setId,
+      sheetId: sheetMetadata.id,
       sheetName,
     });
   };
@@ -291,18 +340,13 @@ export class TrackerSyncer implements ITrackerSyncer {
     const { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
     const sortedBoosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
 
-    // for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
-    //   console.log(`Syncing set ${boosterPackSet.id}...`);
-    //   await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
-    // }
-
-    // await this.syncVerificationSheet({ boosterPackSets: sortedBoosterPackSets });
-    // await this.syncSetStatsSheet({ boosterPackSets: sortedBoosterPackSets });
-    // await this.syncSetRarityStatsSheet({ boosterPackSets: sortedBoosterPackSets });
-    for (const set of sortedBoosterPackSets) {
-      for (const pack of set.packs) {
-        console.log(pack.name);
-      }
+    for (const [setIndex, boosterPackSet] of sortedBoosterPackSets.entries()) {
+      console.log(`Syncing set ${boosterPackSet.id}...`);
+      await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
     }
+
+    await this.syncVerificationSheet({ boosterPackSets: sortedBoosterPackSets });
+    await this.syncSetStatsSheet({ boosterPackSets: sortedBoosterPackSets });
+    await this.syncSetRarityStatsSheet({ boosterPackSets: sortedBoosterPackSets });
   };
 }

@@ -8,7 +8,9 @@ const main = async (): Promise<void> => {
   await trackerSyncer.syncTracker({});
 };
 
-main().catch((err) => {
+main().then(() => {
+  process.exit(0);
+}).catch((err) => {
   console.error('Error:', err);
   process.exit(1);
 });

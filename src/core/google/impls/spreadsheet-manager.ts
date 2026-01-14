@@ -42,6 +42,17 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
       intervalCap: 50,
     });
 
+    let isRateLimited = false;
+    setInterval(() => {
+      if (isRateLimited !== queue.isRateLimited) {
+        isRateLimited = queue.isRateLimited;
+
+        if (isRateLimited) {
+          console.log('[SpreadsheetManager] Rate limiting...');
+        }
+      }
+    }, 5000);
+
     return new SpreadsheetManager({
       queue,
       sheetsApi,
@@ -146,9 +157,10 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
   };
 
   public readonly setCellsToCheckboxes: ISheetWriter['setCellsToCheckboxes'] = async ({
-    columnIndex,
-    count,
+    columnCount,
+    rowCount,
     sheetId,
+    startColumnIndex,
     startRowIndex,
   }) => {
     await this.limited(() =>
@@ -161,9 +173,9 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
                 range: {
                   sheetId,
                   startRowIndex,
-                  endRowIndex: startRowIndex + count,
-                  startColumnIndex: columnIndex,
-                  endColumnIndex: columnIndex + 1,
+                  endRowIndex: startRowIndex + rowCount,
+                  startColumnIndex,
+                  endColumnIndex: startColumnIndex + columnCount,
                 },
                 rule: {
                   condition: {

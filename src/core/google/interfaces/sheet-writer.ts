@@ -10,9 +10,10 @@ export interface ISheetWriter {
   }) => Promise<void>;
 
   setCellsToCheckboxes: (params: {
-    columnIndex: number;
-    count: number;
+    columnCount: number;
+    rowCount: number;
     sheetId: number;
+    startColumnIndex: number;
     startRowIndex: number;
   }) => Promise<void>;
 
