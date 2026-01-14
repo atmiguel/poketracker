@@ -202,4 +202,35 @@ export class SpreadsheetManager implements ISheetReader, ISheetWriter {
       }),
     );
   };
+
+  public readonly formatColumnAsPercent: ISheetWriter['formatColumnAsPercent'] = async ({
+    columnIndex,
+    sheetId,
+  }) => {
+    await this.limited(() => this.sheetsApi.spreadsheets.batchUpdate({
+      spreadsheetId: this.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId,
+                startColumnIndex: columnIndex,
+                endColumnIndex: columnIndex + 1,
+              },
+              cell: {
+                userEnteredFormat: {
+                  numberFormat: {
+                    type: 'PERCENT',
+                    pattern: '0.00%',
+                  },
+                },
+              },
+              fields: 'userEnteredFormat.numberFormat',
+            },
+          },
+        ],
+      },
+    }));
+  }
 }

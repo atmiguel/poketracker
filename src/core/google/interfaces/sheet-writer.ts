@@ -17,4 +17,9 @@ export interface ISheetWriter {
   }) => Promise<void>;
 
   freezeRows: (params: { count: number; sheetId: number }) => Promise<void>;
+
+  formatColumnAsPercent: (params: {
+    columnIndex: number
+    sheetId: number,
+  }) => Promise<void>;
 }

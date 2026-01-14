@@ -2,6 +2,7 @@ import { HtmlElement } from '../../core/html/types';
 import type { ICardParser } from '../interfaces/card-parser';
 import type { Nullable } from '../../core/types';
 import { CARD_RARITY_SYMBOLS, ParsedCard, type CardRarity } from '../types';
+import assert from 'assert';
 
 export class CardParser implements ICardParser {
   public readonly parseCard: ICardParser['parseCard'] = ({ canBeShiny, data }) => {
@@ -19,7 +20,10 @@ export class CardParser implements ICardParser {
         break;
       }
       case 3: {
-        packName = detailsList[2]!.replace('  ', ' ');
+        packName = detailsList[2]!;
+        const suffix = '  pack';
+        assert(packName.endsWith(suffix));
+        packName = packName.slice(0, -suffix.length);
         break;
       }
       default: {

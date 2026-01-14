@@ -1,6 +1,6 @@
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
-import { BoosterPackSet, type Card } from '../../card/types';
+import { BoosterPackSet, CARD_RARITY_SYMBOLS, CardRaritySymbol, type Card } from '../../card/types';
 import { SpreadsheetManager } from '../../core/google/impls/spreadsheet-manager';
 import type { ISheetReader } from '../../core/google/interfaces/sheet-reader';
 import type { ISheetWriter } from '../../core/google/interfaces/sheet-writer';
@@ -96,25 +96,19 @@ export class TrackerSyncer implements ITrackerSyncer {
     setId: string;
     sheetName: string;
   }): Promise<void> => {
-    const range = 'B2:C';
-    const { rows } = await this.sheetReader.readSheetData({ range, sheetName });
-
-    if (rows.length === 0) {
-      // empty columns
-      await this.sheetWriter.overwriteSheetData({
-        range,
-        rows: [
-          ['id', 'name'],
-          ...cards.map((card) => [
-            `${setId} ${card.number.toString().padStart(3, '0')}`,
-            card.name,
-          ]),
-        ],
-        sheetName,
-      });
-    } else {
-      // TODO: ensure columns are set correctly
-    }
+    await this.sheetWriter.overwriteSheetData({
+      range: 'B2:E',
+      rows: [
+        ['id', 'name', 'rarityCount', 'raritySymbol'],
+        ...cards.map((card) => [
+          `${setId} ${card.number.toString().padStart(3, '0')}`,
+          card.name,
+          card.rarity.count,
+          card.rarity.symbol,
+        ]),
+      ],
+      sheetName,
+    });
   };
 
   private static readonly constructSheetMetadataByName = ({ sheets }: { sheets: Array<Sheet> }): Map<string, SheetMetadata> => {
@@ -172,13 +166,7 @@ export class TrackerSyncer implements ITrackerSyncer {
     });
   };
 
-  private readonly syncStatsSheet = async ({
-    boosterPackSets,
-  }: {
-    boosterPackSets: Array<BoosterPackSet>;
-  }) => {
-    const sheetName = 'Stats';
-
+  private readonly appendSheetIfMissing = async ({ sheetName }: { sheetName: string }): Promise<{ sheetId: number }> => {
     const { sheets } = await this.sheetReader.listSheets({});
     const sheetMetadataByName = TrackerSyncer.constructSheetMetadataByName({ sheets });
 
@@ -188,9 +176,20 @@ export class TrackerSyncer implements ITrackerSyncer {
       console.log(`Creating sheet ${sheetName}...`);
       const result = await this.sheetWriter.appendSheet({ name: sheetName });
       sheetId = result.sheetId;
-    } else {
-      // TODO: ensure Stats are set correctly
     }
+    
+    return { sheetId };
+  };
+
+  private readonly syncSetStatsSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {
+    const sheetName = 'SetStats';
+    const { sheetId } = await this.appendSheetIfMissing({ sheetName });
+
+    await this.sheetWriter.freezeRows({ count: 1, sheetId });
 
     await this.sheetWriter.overwriteSheetData({
       range: 'A1',
@@ -210,6 +209,82 @@ export class TrackerSyncer implements ITrackerSyncer {
       ],
       sheetName,
     });
+
+    await this.sheetWriter.formatColumnAsPercent({
+      columnIndex: 4,
+      sheetId,
+    });
+  };
+
+  private static readonly getOwnedRarityFormula = ({ raritySymbol, setId }: { raritySymbol: CardRaritySymbol; setId: string }): string => {
+    return `=COUNTIFS('${setId}'!A3:A, TRUE, '${setId}'!E3:E, "${raritySymbol}")`;
+  };
+
+  private readonly syncSetRarityStatsSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {
+    const sheetName = 'SetRarityStats';
+    const { sheetId } = await this.appendSheetIfMissing({ sheetName });
+
+    await this.sheetWriter.freezeRows({ count: 1, sheetId });
+
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [
+        ['setId', 'setName', 'raritySymbol', 'ownedCount', 'totalCount', 'ownedPercent'],
+        ...boosterPackSets.flatMap((boosterPackSet, setIndex) => {
+          return CardRaritySymbol.options.map((raritySymbol, rarityIndex) => {
+            const rowNumber = (setIndex * CardRaritySymbol.options.length) + rarityIndex + 2;
+
+            return [
+              boosterPackSet.id,
+              boosterPackSet.name,
+              raritySymbol,
+              TrackerSyncer.getOwnedRarityFormula({ raritySymbol, setId: boosterPackSet.id }),
+              `=COUNTIF('${boosterPackSet.id}'!E3:E, "${raritySymbol}")`,
+              `=IFERROR(D${rowNumber}/E${rowNumber}, 0)`,
+            ];
+          });
+        }),
+      ],
+      sheetName,
+    });
+
+    await this.sheetWriter.formatColumnAsPercent({
+      columnIndex: 5,
+      sheetId,
+    });
+  };
+
+  private readonly syncVerificationSheet = async ({
+    boosterPackSets,
+  }: {
+    boosterPackSets: Array<BoosterPackSet>;
+  }) => {
+    const sheetName = 'Verification';
+    const { sheetId } = await this.appendSheetIfMissing({ sheetName });
+
+    await this.sheetWriter.freezeRows({ count: 1, sheetId });
+
+    await this.sheetWriter.overwriteSheetData({
+      range: 'A1',
+      rows: [
+        ['setId', 'setName', 'diamondCount', 'starCount', 'shinyCount', 'crownCount'],
+        ...boosterPackSets.map((boosterPackSet) => {
+          return [
+            boosterPackSet.id,
+            boosterPackSet.name,
+            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Diamond, setId: boosterPackSet.id }),
+            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Star, setId: boosterPackSet.id }),
+            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Shiny, setId: boosterPackSet.id }),
+            TrackerSyncer.getOwnedRarityFormula({ raritySymbol: CARD_RARITY_SYMBOLS.Crown, setId: boosterPackSet.id }),
+          ];
+        }),
+      ],
+      sheetName,
+    });
   };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
@@ -221,6 +296,13 @@ export class TrackerSyncer implements ITrackerSyncer {
     //   await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
     // }
 
-    await this.syncStatsSheet({ boosterPackSets: sortedBoosterPackSets });
+    // await this.syncVerificationSheet({ boosterPackSets: sortedBoosterPackSets });
+    // await this.syncSetStatsSheet({ boosterPackSets: sortedBoosterPackSets });
+    // await this.syncSetRarityStatsSheet({ boosterPackSets: sortedBoosterPackSets });
+    for (const set of sortedBoosterPackSets) {
+      for (const pack of set.packs) {
+        console.log(pack.name);
+      }
+    }
   };
 }
