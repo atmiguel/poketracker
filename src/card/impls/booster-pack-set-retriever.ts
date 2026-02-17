@@ -31,7 +31,7 @@ export class BoosterPackSetRetriever implements IBoosterPackSetRetriever {
       const path = CardConstants.BOOSTER_PACK_SETS_PATH;
 
       await this.htmlDownloader.downloadHtmlToFile({
-        mode: FILE_WRITE_MODES.DoNotOverwrite,
+        mode: FILE_WRITE_MODES.OverwriteIfExists,
         path,
         url: CardConstants.BOOSTER_PACK_SETS_URL,
       });
