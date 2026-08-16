@@ -1,0 +1,44 @@
+name: Sync tracker
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-tracker
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write Google service account credentials
+        run: mkdir -p credentials && printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > credentials/service-account.json
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+
+      - run: npm run main
+
+      - name: Commit HTML cache updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add resources/card-html/
+          if git diff --staged --quiet; then
+            echo "No cache changes to commit"
+          else
+            git commit -m "Update card HTML cache from sync"
+            git push
+          fi
