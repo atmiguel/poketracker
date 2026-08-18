@@ -1,3 +1,4 @@
+import { FlibustierBoosterPackSetRetriever } from '../../card/impls/flibustier-booster-pack-set-retriever';
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
 import { BoosterPack, BoosterPackSet, CARD_RARITY_SYMBOLS, CardRaritySymbol, type Card } from '../../card/types';
@@ -462,18 +463,20 @@ export class TrackerSyncer implements ITrackerSyncer {
   };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
-    let { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
-    boosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
+    // let { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
+    let { boosterPackSets } = await (new FlibustierBoosterPackSetRetriever()).retrieveBoosterPackSets({});
+    console.log(boosterPackSets);
+    // boosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
 
-    for (const [setIndex, boosterPackSet] of boosterPackSets.entries()) {
-      console.log(`Syncing set ${boosterPackSet.id}...`);
-      await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
-    }
+    // for (const [setIndex, boosterPackSet] of boosterPackSets.entries()) {
+    //   console.log(`Syncing set ${boosterPackSet.id}...`);
+    //   await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
+    // }
 
-    await this.syncVerificationSheet({ boosterPackSets });
-    await this.syncSetStatsSheet({ boosterPackSets });
-    await this.syncSetRarityStatsSheet({ boosterPackSets });
-    await this.syncPackStatsSheet({ boosterPackSets });
-    await this.syncPackRarityStatsSheet({ boosterPackSets });
+    // await this.syncVerificationSheet({ boosterPackSets });
+    // await this.syncSetStatsSheet({ boosterPackSets });
+    // await this.syncSetRarityStatsSheet({ boosterPackSets });
+    // await this.syncPackStatsSheet({ boosterPackSets });
+    // await this.syncPackRarityStatsSheet({ boosterPackSets });
   };
 }
