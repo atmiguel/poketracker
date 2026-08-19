@@ -1,14 +1,6 @@
-import { CoreConstants } from '../core/constants';
-import { Path } from '../core/path/types';
 import { CARD_RARITY_SYMBOLS, type CardRarity } from './types';
 
 export namespace CardConstants {
-  const baseUrl = 'https://pocket.limitlesstcg.com';
-  export const BOOSTER_PACK_SETS_URL = `${baseUrl}/cards`;
-
-  export const BASE_PATH = Path.create(`${CoreConstants.RESOURCES_PATH}/card-html`);
-  export const BOOSTER_PACK_SETS_PATH = Path.create(`${BASE_PATH}/booster-pack-sets.html`);
-
   export namespace Rarity {
     export const DIAMOND_1: CardRarity = {
       count: 1,

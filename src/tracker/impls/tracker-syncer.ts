@@ -128,34 +128,34 @@ export class TrackerSyncer implements ITrackerSyncer {
   }): Promise<void> => {
     const { cards } = TrackerSyncer.extractCards({ cardCount, packs });
 
-    await this.sheetWriter.overwriteSheetData({
-      range: 'B2',
-      rows: [
-        [
-          'id',
-          'name',
-          'rarityCount',
-          'raritySymbol',
-          ...packs.map((pack) => TrackerSyncer.constructPackHeader({ packName: pack.name })),
-        ],
-        ...cards.map((card) => [
-          `${setId} ${card.number.toString().padStart(3, '0')}`,
-          card.name,
-          card.rarity.count,
-          card.rarity.symbol,
-          ...packs.map((pack) => card.packNames.includes(pack.name)),
-        ]),
-      ],
-      sheetName,
-    });
+    // await this.sheetWriter.overwriteSheetData({
+    //   range: 'B2',
+    //   rows: [
+    //     [
+    //       'id',
+    //       'name',
+    //       'rarityCount',
+    //       'raritySymbol',
+    //       ...packs.map((pack) => TrackerSyncer.constructPackHeader({ packName: pack.name })),
+    //     ],
+    //     ...cards.map((card) => [
+    //       `${setId} ${card.number.toString().padStart(3, '0')}`,
+    //       card.name,
+    //       card.rarity.count,
+    //       card.rarity.symbol,
+    //       ...packs.map((pack) => card.packNames.includes(pack.name)),
+    //     ]),
+    //   ],
+    //   sheetName,
+    // });
 
-    await this.sheetWriter.setCellsToCheckboxes({
-      columnCount: packs.length,
-      rowCount: cardCount,
-      sheetId,
-      startColumnIndex: 5,
-      startRowIndex: 2,
-    });
+    // await this.sheetWriter.setCellsToCheckboxes({
+    //   columnCount: packs.length,
+    //   rowCount: cardCount,
+    //   sheetId,
+    //   startColumnIndex: 5,
+    //   startRowIndex: 2,
+    // });
   };
 
   private static readonly constructSheetMetadataByName = ({ sheets }: { sheets: Array<Sheet> }): Map<string, SheetMetadata> => {
