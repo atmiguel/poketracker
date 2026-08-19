@@ -12,21 +12,6 @@ npm run main
 
 A GitHub Actions workflow ([`.github/workflows/sync-tracker.yml`](.github/workflows/sync-tracker.yml)) runs `npm run main` once per day at 2pm UTC (7am PT) and can be triggered manually from the Actions tab.
 
-### Setup
-
-1. Share your Google Sheet with the service account email (`client_email` in your JSON key) as Editor.
-2. In GitHub repo **Settings → Secrets and variables → Actions**, add a secret:
-   - Name: `GOOGLE_SERVICE_ACCOUNT_JSON`
-   - Value: full contents of `credentials/service-account.json`
-
-### Manual run
-
-Open **Actions → Sync tracker → Run workflow**.
-
-When new sets or cards are downloaded, the workflow commits updated files under `resources/card-html/` back to the repo.
-
-Note: each run re-syncs all sets to the spreadsheet even when no new pack exists. This is harmless but uses Google Sheets API quota.
-
 ## Layout
 
 With the exception of scripts, all files must be one of the following types:

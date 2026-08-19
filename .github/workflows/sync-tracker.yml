@@ -12,8 +12,6 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -24,21 +22,11 @@ jobs:
 
       - run: npm ci
 
+      - run: npm update pokemon-tcg-pocket-database
+
       - name: Write Google service account credentials
         run: mkdir -p credentials && printf '%s' "$GOOGLE_SERVICE_ACCOUNT_JSON" > credentials/service-account.json
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
 
       - run: npm run main
-
-      - name: Commit HTML cache updates
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add resources/card-html/
-          if git diff --staged --quiet; then
-            echo "No cache changes to commit"
-          else
-            git commit -m "Update card HTML cache from sync"
-            git push
-          fi
