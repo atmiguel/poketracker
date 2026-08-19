@@ -1,4 +1,3 @@
-import { FlibustierBoosterPackSetRetriever } from '../../card/impls/flibustier-booster-pack-set-retriever';
 import { CardInstances } from '../../card/instances';
 import type { IBoosterPackSetRetriever } from '../../card/interfaces/booster-pack-set-retriever';
 import { BoosterPack, BoosterPackSet, CARD_RARITY_SYMBOLS, CardRaritySymbol, type Card } from '../../card/types';
@@ -129,34 +128,34 @@ export class TrackerSyncer implements ITrackerSyncer {
   }): Promise<void> => {
     const { cards } = TrackerSyncer.extractCards({ cardCount, packs });
 
-    await this.sheetWriter.overwriteSheetData({
-      range: 'B2',
-      rows: [
-        [
-          'id',
-          'name',
-          'rarityCount',
-          'raritySymbol',
-          ...packs.map((pack) => TrackerSyncer.constructPackHeader({ packName: pack.name })),
-        ],
-        ...cards.map((card) => [
-          `${setId} ${card.number.toString().padStart(3, '0')}`,
-          card.name,
-          card.rarity.count,
-          card.rarity.symbol,
-          ...packs.map((pack) => card.packNames.includes(pack.name)),
-        ]),
-      ],
-      sheetName,
-    });
+    // await this.sheetWriter.overwriteSheetData({
+    //   range: 'B2',
+    //   rows: [
+    //     [
+    //       'id',
+    //       'name',
+    //       'rarityCount',
+    //       'raritySymbol',
+    //       ...packs.map((pack) => TrackerSyncer.constructPackHeader({ packName: pack.name })),
+    //     ],
+    //     ...cards.map((card) => [
+    //       `${setId} ${card.number.toString().padStart(3, '0')}`,
+    //       card.name,
+    //       card.rarity.count,
+    //       card.rarity.symbol,
+    //       ...packs.map((pack) => card.packNames.includes(pack.name)),
+    //     ]),
+    //   ],
+    //   sheetName,
+    // });
 
-    await this.sheetWriter.setCellsToCheckboxes({
-      columnCount: packs.length,
-      rowCount: cardCount,
-      sheetId,
-      startColumnIndex: 5,
-      startRowIndex: 2,
-    });
+    // await this.sheetWriter.setCellsToCheckboxes({
+    //   columnCount: packs.length,
+    //   rowCount: cardCount,
+    //   sheetId,
+    //   startColumnIndex: 5,
+    //   startRowIndex: 2,
+    // });
   };
 
   private static readonly constructSheetMetadataByName = ({ sheets }: { sheets: Array<Sheet> }): Map<string, SheetMetadata> => {
@@ -463,20 +462,18 @@ export class TrackerSyncer implements ITrackerSyncer {
   };
 
   public readonly syncTracker: ITrackerSyncer['syncTracker'] = async ({}) => {
-    // let { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
-    let { boosterPackSets } = await (new FlibustierBoosterPackSetRetriever()).retrieveBoosterPackSets({});
-    console.log(boosterPackSets);
-    // boosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
+    let { boosterPackSets } = await this.boosterPackSetRetriever.retrieveBoosterPackSets({});
+    boosterPackSets = SortUtils.sortByString(boosterPackSets, (o) => o.id).reverse();
 
-    // for (const [setIndex, boosterPackSet] of boosterPackSets.entries()) {
-    //   console.log(`Syncing set ${boosterPackSet.id}...`);
-    //   await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
-    // }
+    for (const [setIndex, boosterPackSet] of boosterPackSets.entries()) {
+      console.log(`Syncing set ${boosterPackSet.id}...`);
+      await this.syncBoosterPackSet({ boosterPackSet, setId: boosterPackSet.id, setIndex });
+    }
 
-    // await this.syncVerificationSheet({ boosterPackSets });
-    // await this.syncSetStatsSheet({ boosterPackSets });
-    // await this.syncSetRarityStatsSheet({ boosterPackSets });
-    // await this.syncPackStatsSheet({ boosterPackSets });
-    // await this.syncPackRarityStatsSheet({ boosterPackSets });
+    await this.syncVerificationSheet({ boosterPackSets });
+    await this.syncSetStatsSheet({ boosterPackSets });
+    await this.syncSetRarityStatsSheet({ boosterPackSets });
+    await this.syncPackStatsSheet({ boosterPackSets });
+    await this.syncPackRarityStatsSheet({ boosterPackSets });
   };
 }
